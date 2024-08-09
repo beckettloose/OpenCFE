@@ -99,7 +99,7 @@ void LCD::addToQueue(uint32_t id, uint8_t data[8]) {
 
     CANPacket *packet = lcd_data_queue.try_alloc();
 
-    memcpy(packet->data, &data, sizeof(packet->data));
+    memcpy(packet->data, data, sizeof(packet->data));
     packet->id = id;
 
     lcd_data_queue.put(packet);

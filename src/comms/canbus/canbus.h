@@ -4,6 +4,7 @@
 #include <cstdint>
 
 #include <mbed.h>
+#include <PinNames.h>
 #include "libraries/LinkedList.h"
 
 #define CAN_RX_QUEUE_SIZE 50
@@ -28,21 +29,27 @@ class CANbus {
             static CANbus instance;
             return &instance;
         };
-        CANbus();
         void tx_ls(CANPacket *packet);
         void tx_hs(CANPacket *packet);
-        void process_rx();
+        void process_rx(CANMessage message);
         static void periodic();
         void notify_listeners(CANPacket *packet);
         void addListener(CANbus::Listener *listener);
+        EventQueue *rx_event_queue;
 
     private:
+        CANbus();
+        CAN* CAN_ls;
+        CAN* CAN_hs;
+
         LinkedList<CANbus::Listener *> rx_listeners;
         Mail<CANPacket, CAN_RX_QUEUE_SIZE> rx_queue;
         uint32_t last_can_rx = 0;
 
         CANMessage tx_frame;
         CANMessage rx_frame;
+
+        Thread rx_event_processor;
 
         void tx_build_message(CANPacket *packet);
         void periodic_internal();
