@@ -9,6 +9,8 @@
 
 #define CAN_RX_QUEUE_SIZE 50
 
+namespace Volvo {
+
 struct CANPacket {
     uint32_t id;
     uint8_t data[8] = {0};
@@ -56,5 +58,7 @@ class CANbus {
         static void on_can_rx_ls();
         static void on_can_rx_hs();
 };
+
+}
 
 #endif

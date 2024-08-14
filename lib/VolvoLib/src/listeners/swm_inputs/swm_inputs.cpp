@@ -1,5 +1,7 @@
-#include "comms/listeners/swm_inputs/swm_inputs.h"
+#include "swm_inputs.h"
 #include <cstdint>
+
+namespace Volvo {
 
 SWM_Inputs::SWM_Inputs() {
     // TODO: Should we set a bitmask here?
@@ -46,4 +48,6 @@ void SWM_Inputs::listener_update(CANPacket *packet) {
             break;
         }
     }
+}
+
 }

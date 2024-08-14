@@ -1,8 +1,10 @@
-#include "comms/d2/d2_protocol.h"
+#include "d2_protocol.h"
 #include "mbed_assert.h"
 #include "mbed_error.h"
 #include <cstdint>
 #include <cstring>
+
+namespace Volvo {
 
 D2_Protocol::D2_Protocol() {
     // initialize can bus and register a message filter for D2 Responses
@@ -239,4 +241,6 @@ uint8_t D2_Protocol::getNextSeqNumber(uint8_t currentNumber) {
 }
 
 void D2_Protocol::_keepAliveSend() {
+}
+
 }

@@ -1,9 +1,11 @@
 #ifndef __DAYLIGHT_SENSOR_H
 #define __DAYLIGHT_SENSOR_H
 
-#include "comms/canbus/canbus.h"
+#include "canbus/canbus.h"
 
 #define DAYLIGHT_MESSAGE 0x2802262
+
+namespace Volvo {
 
 class DaylightSensor : public CANbus::Listener {
 public:
@@ -22,5 +24,7 @@ private:
 
     int daylight = 0xF; // default to full brightness
 };
+
+}
 
 #endif

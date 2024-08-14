@@ -3,10 +3,7 @@
 #include <mbed.h>
 #include <mbed_events.h>
 
-#include "comms/canbus/canbus.h"
-
-#include "comms/listeners/swm_inputs/swm_inputs.h"
-#include "comms/listeners/daylight_sensor/daylight_sensor.h"
+#include <VolvoLib.h>
 
 EventQueue equeue;
 void handler(int count);

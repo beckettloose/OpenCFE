@@ -1,7 +1,7 @@
 #ifndef SWM_INPUTS_H
 #define SWM_INPUTS_H
 
-#include "comms/canbus/canbus.h"
+#include "canbus/canbus.h"
 #include <cstdint>
 
 #define SWM_MESSAGE_1 0x00404066
@@ -11,6 +11,8 @@
 /*#define MEDIA_NEXT 0x02*/
 /*#define MEDIA_VOL_UP 0x04*/
 /*#define MEDIA_VOL_DOWN 0x08*/
+
+namespace Volvo {
 
 class SWM_Inputs : public CANbus::Listener {
 public:
@@ -81,5 +83,7 @@ private:
     uint8_t rotary_switch_position = 0;
     bool rotary_switch_initialized = false;
 };
+
+}
 
 #endif

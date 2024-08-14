@@ -1,4 +1,6 @@
-#include "comms/listeners/daylight_sensor/daylight_sensor.h"
+#include "daylight_sensor.h"
+
+namespace Volvo {
 
 DaylightSensor::DaylightSensor() {
     canbus->addListener(this);
@@ -9,4 +11,6 @@ void DaylightSensor::listener_update(CANPacket *packet) {
     if (packet->id == daylightMessage) {
         daylight = packet->data[7] - 0x10;
     }
+}
+
 }

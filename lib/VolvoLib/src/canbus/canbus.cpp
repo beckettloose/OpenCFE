@@ -1,8 +1,10 @@
-#include "comms/canbus/canbus.h"
+#include "canbus.h"
 
 #include <cstring>
 #include <mbed.h>
 #include "libraries/LinkedList.h"
+
+namespace Volvo {
 
 CANbus::CANbus() {
     rx_listeners = LinkedList<CANbus::Listener *>();
@@ -78,4 +80,6 @@ void CANbus::on_can_rx_hs() {
 
 void CANbus::on_can_rx_ls() {
     // TODO: copy can messages to queue
+}
+
 }

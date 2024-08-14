@@ -1,6 +1,6 @@
-#include "comms/lcd/lcd.h"
-#include "comms/canbus/canbus.h"
-#include <cstdint>
+#include "lcd.h"
+
+namespace Volvo {
 
 LCD::LCD() {}
 
@@ -113,4 +113,6 @@ void LCD::periodic() {
 
     canbus->tx_ls(packet);
     lcd_data_queue.free(packet);
+}
+
 }

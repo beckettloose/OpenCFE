@@ -5,6 +5,8 @@
 #include "libraries/LinkedList.h"
 #include <cstdint>
 
+namespace Volvo {
+
 /* Manages the D2 session and provides utility functions for processing messages */
 class D2_Protocol {
 public:
@@ -49,5 +51,7 @@ private:
     Event<void()> *keepAliveEvent;
     void _keepAliveSend();
 };
+
+}
 
 #endif
