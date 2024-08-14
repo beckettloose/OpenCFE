@@ -1,12 +1,16 @@
 // mbed rtos events example
 
 #include <mbed.h>
+#include <mbed_events.h>
 
+#include "comms/canbus/canbus.h"
 
+#include "comms/listeners/swm_inputs/swm_inputs.h"
+#include "comms/listeners/daylight_sensor/daylight_sensor.h"
 
-EventQueue queue;
+EventQueue equeue;
 void handler(int count);
-Event<void(int)> event(&queue, handler);
+Event<void(int)> event(&equeue, handler);
 
 void handler(int count) {
     printf("Event = %d \n", count);
@@ -20,14 +24,20 @@ void post_events(void) {
 }
 
 int main() {
-    Thread event_thread;
+    // Initialize CAN bus
+    CANbus *can = CANbus::getInstance();
 
-    event.delay(100);
-    event.period(200);
+    // Initialize CAN bus listeners
+    SWM_Inputs *swm_inputs = SWM_Inputs::getInstance();
+    DaylightSensor *daylight_sensor = DaylightSensor::getInstance();
 
-    event_thread.start(callback(post_events));
+    // Add CAN bus listeners to CAN bus
+    can->addListener(swm_inputs);
+    can->addListener(daylight_sensor);
 
-    queue.dispatch(400);
+    // Request the shared event queue
+    EventQueue *queue = mbed_event_queue();
 
-    event_thread.join();
+    // Dispatch the shared queue forever
+    queue->dispatch_forever();
 }

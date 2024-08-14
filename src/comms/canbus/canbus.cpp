@@ -71,3 +71,11 @@ void CANbus::notify_listeners(CANPacket *packet) {
 void CANbus::addListener(CANbus::Listener *listener) {
     rx_listeners.add(listener);
 }
+
+void CANbus::on_can_rx_hs() {
+    // TODO: copy can messages to queue
+}
+
+void CANbus::on_can_rx_ls() {
+    // TODO: copy can messages to queue
+}
