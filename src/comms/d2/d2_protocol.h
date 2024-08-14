@@ -33,8 +33,8 @@ public:
     /* Convert the message at *data to can frames and store it at *dest. Returns the total number of frames generated*/
     uint32_t messageToFrames(uint8_t *data, uint8_t *dest, uint32_t size);
 
-    /* Try to unpack the D2 message. This calculates which ECU it is meant for */
-    void unpackFrame(uint32_t rxId, uint8_t *data, uint32_t size);
+    /* Try to unpack the D2 message. */
+    uint8_t* unpackMessage(uint8_t *data, uint32_t size);
 
     /* Parse the header frame of a D2 message. Takes a pointer to the first byte of the frame */
     FrameHeader parseFrameHeader(uint8_t *firstByte);

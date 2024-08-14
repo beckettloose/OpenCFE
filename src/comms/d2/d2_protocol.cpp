@@ -1,6 +1,7 @@
 #include "comms/d2/d2_protocol.h"
 #include "mbed_assert.h"
 #include "mbed_error.h"
+#include <cstdint>
 #include <cstring>
 
 D2_Protocol::D2_Protocol() {
@@ -95,11 +96,52 @@ uint32_t D2_Protocol::messageToFrames(uint8_t *data, uint8_t *dest, uint32_t siz
     return numFrames;
 }
 
-void D2_Protocol::unpackFrame(uint32_t rxId, uint8_t *data, uint32_t size) {
+uint8_t* D2_Protocol::unpackMessage(uint8_t *data, uint32_t size) {
     // make sure the size of our input array is valid
     if ((size % 8) != 0) {
         // error, we do not have proper frames
-    }}
+    }
+
+    uint32_t numFrames = size / 8;
+
+    // Temporary variables for frame decoding
+    FrameHeader header;
+    uint8_t currentFrame[8] = {0};
+
+    header = parseFrameHeader(&data[(numFrames -1) * 8]);
+    uint8_t lastFrameSigBytes = header.numSigBytes;
+
+    uint32_t messageTotalBytes = (8 * (numFrames - 1)) + lastFrameSigBytes;
+
+    uint8_t* message = new uint8_t[messageTotalBytes];
+
+    uint8_t lastSequenceNumber = 0;
+
+    for (uint32_t frame = 0; frame < numFrames; frame++) {
+        header = FrameHeader();
+        memset(currentFrame, 0, sizeof(currentFrame));
+
+        memcpy(&currentFrame, &data[frame * 8], 8 * sizeof(uint8_t));
+        header = parseFrameHeader(currentFrame);
+
+        // if not first or last frame, check sequence number
+        if (!((frame == 0) || (frame == (numFrames - 1)))) {
+            uint8_t nextSequenceNumber = getNextSeqNumber(lastSequenceNumber);
+            if (header.sequenceNumber != nextSequenceNumber) {
+                // bad things have happened
+            }
+            lastSequenceNumber = nextSequenceNumber;
+        }
+        // if last frame, only read significant bytes
+        if (frame == (numFrames - 1)) {
+            memcpy(&message[frame * 7], &currentFrame[1], lastFrameSigBytes * sizeof(uint8_t));
+        } else { // otherwise read all bytes
+            memcpy(&message[frame * 7], &currentFrame[1], 7 * sizeof(uint8_t));
+        }
+    }
+
+    return message;
+}
 
 D2_Protocol::FrameHeader D2_Protocol::parseFrameHeader(uint8_t *firstByte) {
     // single frame: mask 0xF8, filter 0xC8, last3 num sig bytes
