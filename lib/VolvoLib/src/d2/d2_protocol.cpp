@@ -1,8 +1,7 @@
 #include "d2_protocol.h"
-#include "mbed_assert.h"
-#include "mbed_error.h"
 #include <cstdint>
 #include <cstring>
+#include <deque>
 
 namespace Volvo {
 
@@ -19,6 +18,7 @@ uint32_t D2_Protocol::getNumFrames(uint32_t numBytes) {
     // a zero length message is not part of the known D2 spec
     if (numBytes == 0) {
         // TODO: throw an error
+        return 0;
     }
 
     // each d2 CAN frame can hold 7 bytes of message data.
@@ -33,98 +33,99 @@ uint32_t D2_Protocol::getNumFrames(uint32_t numBytes) {
     return numFrames;
 }
 
-uint32_t D2_Protocol::messageToFrames(uint8_t *data, uint8_t *dest, uint32_t size) {
+std::deque<uint8_t>* D2_Protocol::messageToFrames(std::deque<uint8_t> *data) {
     // Validate inputs
-    if (
-        data == nullptr ||
-        dest == nullptr ||
-        size < 1
-    ) {
+    if (data == nullptr) {
         // error, invalid pointer or no data
     }
 
     // Temporary variables for frame generation
     FrameHeader header;
-    uint8_t currentFrame[8] = {0};
+    std::deque<uint8_t> *frames = new std::deque<uint8_t>;
 
-    // calculate the number of frames and zero out the memory
-    uint32_t numFrames = getNumFrames(size);
-    memset(dest, 0, sizeof(uint8_t[8]) * numFrames);
+    // calculate the number of frames
+    uint32_t numFrames = getNumFrames(data->size());
 
     if (numFrames == 1) { // Message can fit into 1 can frame
         header.type = FrameHeader::Type::SINGLE;
-        header.numSigBytes = size;
-        currentFrame[0] = buildFrameHeader(&header);
-        memcpy(&currentFrame[1], &data[0], size * sizeof(uint8_t));
-        memcpy(&dest[0], &currentFrame, sizeof(currentFrame));
+        header.numSigBytes = data->size();
+        frames->push_back(buildFrameHeader(&header));
+        while (!data->empty()) {
+            frames->push_back(data->front());
+            data->pop_front();
+        }
+        // make sure we round out the end with zeros
+        while ((frames->size() % 8) != 0) {
+            frames->push_back(0x0);
+        }
     } else { // We need to generate a sequence of multiple frames
         uint8_t sequenceNumber = 0; // Used for keeping track of intermediate frames
 
         for (uint32_t frame = 0; frame < numFrames; frame++) {
             // Reset our temporary variables
             header = FrameHeader();
-            memset(currentFrame, 0, sizeof(currentFrame));
-
-            // Determine the starting indicies of the data for this frame
-            uint32_t dataStartIndex = 7 * frame;
-            uint32_t destStartIndex = 8 * frame;
 
             if (frame == 0) { // Special case for the first frame
                 header.type = FrameHeader::Type::EXT_FIRST;
-                currentFrame[0] = buildFrameHeader(&header);
-                memcpy(&currentFrame[1], &data[0], 7 * sizeof(uint8_t));
+                frames->push_back(buildFrameHeader(&header));
+                for (int i = 0; i < 7; i++) {
+                    frames->push_back(data->front());
+                    data->pop_front();
+                }
             } else if (frame == (numFrames - 1)) { // Special case for the last frame
+                if (data->size() > 7) {
+                    // problem because we assume this to be false
+                }
                 header.type = FrameHeader::Type::EXT_LAST;
-                uint8_t numSigBytes = (dataStartIndex + 6) - size;
-                header.numSigBytes = numSigBytes;
-                currentFrame[0] = buildFrameHeader(&header);
-                memcpy(&currentFrame[1], &data[dataStartIndex], numSigBytes * sizeof(uint8_t));
+                header.numSigBytes = data->size();
+                frames->push_back(buildFrameHeader(&header));
+                while (!data->empty()) {
+                    frames->push_back(data->front());
+                    data->pop_front();
+               }
+                // make sure we round out the end with zeros
+                while ((frames->size() % 8) != 0) {
+                    frames->push_back(0x0);
+                }
             } else { // All other cases, generate an intermediate frame
                 header.type = FrameHeader::Type::EXT_MIDDLE;
                 header.sequenceNumber = sequenceNumber;
-                currentFrame[0] = buildFrameHeader(&header);
-                memcpy(&currentFrame[1], &data[dataStartIndex], 7 * sizeof(uint8_t));
+                frames->push_back(buildFrameHeader(&header));
+                for (int i = 0; i < 7; i++) {
+                    frames->push_back(data->front());
+                    data->pop_front();
+                }
 
                 // update sequence number for next iteration
                 sequenceNumber = getNextSeqNumber(sequenceNumber);
             }
-
-            // at end of each loop iteration, copy the current frame data to the dest.
-            memcpy(&dest[destStartIndex], &currentFrame, sizeof(currentFrame));
         }
     }
 
-    // return the number of frames generated
-    return numFrames;
+    return frames;
 }
 
-uint8_t* D2_Protocol::unpackMessage(uint8_t *data, uint32_t size) {
+std::deque<uint8_t>* D2_Protocol::unpackMessage(std::deque<uint8_t> *data) {
     // make sure the size of our input array is valid
-    if ((size % 8) != 0) {
+    if ((data->size() % 8) != 0) {
         // error, we do not have proper frames
     }
 
-    uint32_t numFrames = size / 8;
+    uint32_t numFrames = data->size() / 8;
 
     // Temporary variables for frame decoding
     FrameHeader header;
-    uint8_t currentFrame[8] = {0};
+    /*uint8_t currentFrame[8] = {0};*/
 
-    header = parseFrameHeader(&data[(numFrames -1) * 8]);
-    uint8_t lastFrameSigBytes = header.numSigBytes;
-
-    uint32_t messageTotalBytes = (8 * (numFrames - 1)) + lastFrameSigBytes;
-
-    uint8_t* message = new uint8_t[messageTotalBytes];
+    std::deque<uint8_t>* message = new std::deque<uint8_t>();
 
     uint8_t lastSequenceNumber = 0;
 
     for (uint32_t frame = 0; frame < numFrames; frame++) {
         header = FrameHeader();
-        memset(currentFrame, 0, sizeof(currentFrame));
 
-        memcpy(&currentFrame, &data[frame * 8], 8 * sizeof(uint8_t));
-        header = parseFrameHeader(currentFrame);
+        header = parseFrameHeader(&data->front());
+        data->pop_front();
 
         // if not first or last frame, check sequence number
         if (!((frame == 0) || (frame == (numFrames - 1)))) {
@@ -136,9 +137,15 @@ uint8_t* D2_Protocol::unpackMessage(uint8_t *data, uint32_t size) {
         }
         // if last frame, only read significant bytes
         if (frame == (numFrames - 1)) {
-            memcpy(&message[frame * 7], &currentFrame[1], lastFrameSigBytes * sizeof(uint8_t));
+            for (int i = 0; i < header.numSigBytes; i++) {
+                message->push_back(data->front());
+                data->pop_front();
+            }
         } else { // otherwise read all bytes
-            memcpy(&message[frame * 7], &currentFrame[1], 7 * sizeof(uint8_t));
+            for (int i = 0; i < 7; i++) {
+                message->push_back(data->front());
+                data->pop_front();
+            }
         }
     }
 
@@ -152,9 +159,8 @@ D2_Protocol::FrameHeader D2_Protocol::parseFrameHeader(uint8_t *firstByte) {
     // multi last: mask 0xF8, filter 0x48, last3 num sig bytes
 
     // this pointer should be valid
-    MBED_ASSERT(firstByte);
     if (firstByte == nullptr) {
-        MBED_ERROR( MBED_MAKE_ERROR(MBED_MODULE_APPLICATION, MBED_ERROR_CODE_INVALID_ARGUMENT), "Pointer to first byte is null");
+        // TODO: Fix
     }
 
     D2_Protocol::FrameHeader header;
@@ -172,7 +178,7 @@ D2_Protocol::FrameHeader D2_Protocol::parseFrameHeader(uint8_t *firstByte) {
         header.numSigBytes = (*firstByte & 0b111);
     } else {
         // Throw error if we don't match any conditions
-        MBED_ERROR(MBED_MAKE_ERROR(MBED_MODULE_APPLICATION, MBED_ERROR_CODE_INVALID_ARGUMENT), "Header byte did not match expected format");
+        // TODO: Fix
     }
 
     return header;
@@ -186,7 +192,7 @@ uint8_t D2_Protocol::buildFrameHeader(D2_Protocol::FrameHeader *header) {
 
     // Make sure our pointer is valid
     if (header == nullptr) {
-        MBED_ERROR( MBED_MAKE_ERROR(MBED_MODULE_APPLICATION, MBED_ERROR_CODE_INVALID_ARGUMENT), "Header pointer is null");
+        // TODO: Fix
     }
 
     uint8_t headerByte = 0;
@@ -198,7 +204,7 @@ uint8_t D2_Protocol::buildFrameHeader(D2_Protocol::FrameHeader *header) {
         case FrameHeader::Type::SINGLE: {
             // number of sig bytes should always be [1,7]
             if (numSigBytes < 1 || numSigBytes > 7) {
-                MBED_ERROR(MBED_MAKE_ERROR(MBED_MODULE_APPLICATION, MBED_ERROR_CODE_INVALID_ARGUMENT), "Invalid number of significant bytes");
+                // TODO: Fix
             }
             headerByte = 0xC8 + numSigBytes;
             break;
@@ -209,9 +215,8 @@ uint8_t D2_Protocol::buildFrameHeader(D2_Protocol::FrameHeader *header) {
         };
         case FrameHeader::Type::EXT_MIDDLE: {
             // sequence number should always be [0,7] (or maybe 1,7??)
-            MBED_ASSERT(sequenceNum <= 7);
             if (sequenceNum > 7) {
-                MBED_ERROR(MBED_MAKE_ERROR(MBED_MODULE_APPLICATION, MBED_ERROR_CODE_INVALID_ARGUMENT), "Invalid sequence number");
+                // TODO: Fix
             }
             headerByte = 0x08 + sequenceNum;
             break;
@@ -219,13 +224,13 @@ uint8_t D2_Protocol::buildFrameHeader(D2_Protocol::FrameHeader *header) {
         case FrameHeader::Type::EXT_LAST: {
             // number of sig bytes should always be [1,7]
             if (numSigBytes < 1 || numSigBytes > 7) {
-                MBED_ERROR(MBED_MAKE_ERROR(MBED_MODULE_APPLICATION, MBED_ERROR_CODE_INVALID_ARGUMENT), "Invalid number of significant bytes");
+                // TODO: Fix
             }
             headerByte = 0x48 + numSigBytes;
             break;
         };
         default: {
-            MBED_ERROR(MBED_MAKE_ERROR(MBED_MODULE_APPLICATION, MBED_ERROR_CODE_INVALID_ARGUMENT), "Switch on header type fell through");
+            // TODO: Fix
         };
     }
 
@@ -238,9 +243,6 @@ uint8_t D2_Protocol::getNextSeqNumber(uint8_t currentNumber) {
     } else {
         return currentNumber + 1;
     }
-}
-
-void D2_Protocol::_keepAliveSend() {
 }
 
 }

@@ -1,20 +1,14 @@
 #ifndef __D2_PROTOCOL_H
 #define __D2_PROTOCOL_H
 
-#include <mbed.h>
-#include "libraries/LinkedList.h"
 #include <cstdint>
+#include <deque>
 
 namespace Volvo {
 
 /* Manages the D2 session and provides utility functions for processing messages */
 class D2_Protocol {
 public:
-    typedef struct Response {
-        enum class Status { EMPTY, FILLING, FULL } status;
-        LinkedList<uint8_t*> data;
-    } Response;
-
     /* Represents the data contained in the header of a D2 CAN frame */
     typedef struct FrameHeader {
         enum class Type { SINGLE, EXT_FIRST, EXT_MIDDLE, EXT_LAST, INVALID } type;
@@ -30,26 +24,24 @@ public:
     void endSession();
 
     /* Calculate the expected number of CAN frames for a D2 message */
-    uint32_t getNumFrames(uint32_t numBytes);
+    static uint32_t getNumFrames(uint32_t numBytes);
 
     /* Convert the message at *data to can frames and store it at *dest. Returns the total number of frames generated*/
-    uint32_t messageToFrames(uint8_t *data, uint8_t *dest, uint32_t size);
+    static std::deque<uint8_t>* messageToFrames(std::deque<uint8_t> *data);
 
     /* Try to unpack the D2 message. */
-    uint8_t* unpackMessage(uint8_t *data, uint32_t size);
+    static std::deque<uint8_t>* unpackMessage(std::deque<uint8_t> *data);
 
     /* Parse the header frame of a D2 message. Takes a pointer to the first byte of the frame */
-    FrameHeader parseFrameHeader(uint8_t *firstByte);
+    static FrameHeader parseFrameHeader(uint8_t *firstByte);
 
     /* Build the header frame of a D2 message. Takes a pointer to the FrameHeader struct to use */
-    uint8_t buildFrameHeader(FrameHeader *header);
+    static uint8_t buildFrameHeader(FrameHeader *header);
 
     /* Calculate the next sequence number based on the current one. */
-    uint8_t getNextSeqNumber(uint8_t currentNumber);
+    static uint8_t getNextSeqNumber(uint8_t currentNumber);
 private:
     D2_Protocol();
-    Event<void()> *keepAliveEvent;
-    void _keepAliveSend();
 };
 
 }

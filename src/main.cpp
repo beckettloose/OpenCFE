@@ -5,6 +5,10 @@
 
 #include <VolvoLib.h>
 
+#include "canbus/canbus.h"
+#include "listeners/swm_inputs/swm_inputs.h"
+#include "listeners/daylight_sensor/daylight_sensor.h"
+
 EventQueue equeue;
 void handler(int count);
 Event<void(int)> event(&equeue, handler);
