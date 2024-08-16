@@ -9,6 +9,8 @@
 #include "listeners/swm_inputs/swm_inputs.h"
 #include "listeners/daylight_sensor/daylight_sensor.h"
 
+#include "manager/power_state_manager.h"
+
 EventQueue equeue;
 void handler(int count);
 Event<void(int)> event(&equeue, handler);
@@ -36,9 +38,9 @@ int main() {
     can->addListener(swm_inputs);
     can->addListener(daylight_sensor);
 
-    // Request the shared event queue
-    EventQueue *queue = mbed_event_queue();
+    // Create an instance of the power manager
+    PowerStateManager* psmgr = PowerStateManager::getInstance();
 
-    // Dispatch the shared queue forever
-    queue->dispatch_forever();
+    // start the power manager on the main thread.
+    psmgr->start();
 }
