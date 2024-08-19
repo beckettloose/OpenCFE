@@ -1,10 +1,19 @@
 #include "lcd.h"
+#include "EventQueue.h"
+#include "manager/modules/canbus.h"
+#include "manager/subsystem.h"
+#include "mbed_shared_queues.h"
 
 namespace Volvo {
 
-LCD::LCD() {}
+LCD::LCD() {
+    EventQueue *queue = mbed_event_queue();
+    periodicEvent = new Event<void()>(queue, callback(this, &Volvo::LCD::periodic));
+}
 
 void LCD::enable() {
+    if (!enabled) return;
+
     // Turn on display, but media controls are disabled
     uint8_t enableStep1[8] = {0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x05};
     addToQueue(LCD_CONTROL_MESSAGE, enableStep1);
@@ -15,11 +24,30 @@ void LCD::enable() {
 }
 
 void LCD::disable() {
+    if (!enabled) return;
+
     uint8_t disable[8] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
     addToQueue(LCD_CONTROL_MESSAGE, disable);
 }
 
+void LCD::clear() {
+    if (!enabled) return;
+
+    uint8_t clear[8] = {0xE1, 0xFE, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+    addToQueue(LCD_DATA_MESSAGE, clear);
+}
+
+void LCD::clear_force() {
+    uint8_t clear[8] = {0xE1, 0xFE, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+    CANPacket packet;
+    packet.id = LCD_DATA_MESSAGE;
+    memcpy(&packet.data, &clear[0], 8 * sizeof(uint8_t));
+    canbus->tx_ls(&packet);
+}
+
 void LCD::update(char text[], uint8_t len, uint8_t pos) {
+    if (!enabled) return;
+
     char str[8] = {0};
     memcpy(str, text, len);
     char firstByte = 0xE0 + len;
@@ -37,6 +65,8 @@ void LCD::update(char text[], uint8_t len, uint8_t pos) {
 }
 
 void LCD::print(char text[], int len) {
+    if (!enabled) return;
+
     char str[34] = {0};
     std::fill_n(str, 34, 0x20);
     memcpy(str, text, len);
@@ -103,6 +133,41 @@ void LCD::addToQueue(uint32_t id, uint8_t data[8]) {
     packet->id = id;
 
     lcd_data_queue.put(packet);
+}
+
+void LCD::purgeQueue() {
+    while (!lcd_data_queue.empty()) {
+        CANPacket *packet = lcd_data_queue.try_get();
+        if (packet == nullptr) break;
+        lcd_data_queue.free(packet);
+    }
+}
+
+void LCD::disable_force() {
+    uint8_t disable[8] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+
+    CANPacket packet;
+    packet.id = LCD_CONTROL_MESSAGE;
+    memcpy(&packet.data, &disable[0], 8 * sizeof(uint8_t));
+    canbus->tx_ls(&packet);
+}
+
+void LCD::start() {
+    subsystem->registry->acquire();
+    purgeQueue();
+    clear_force();
+    disable_force();
+    periodicEvent->post();
+    enabled = true;
+}
+
+void LCD::stop() {
+    enabled = false;
+    periodicEvent->cancel();
+    purgeQueue();
+    clear_force();
+    disable_force();
+    subsystem->registry->release();
 }
 
 void LCD::periodic() {
