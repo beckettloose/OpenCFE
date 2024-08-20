@@ -9,6 +9,7 @@ namespace Volvo {
 LCD::LCD() {
     EventQueue *queue = mbed_event_queue();
     periodicEvent = new Event<void()>(queue, callback(this, &Volvo::LCD::periodic));
+    periodicEvent->period(50ms);
 }
 
 void LCD::enable() {
@@ -42,7 +43,7 @@ void LCD::clear_force() {
     CANPacket packet;
     packet.id = LCD_DATA_MESSAGE;
     memcpy(&packet.data, &clear[0], 8 * sizeof(uint8_t));
-    canbus->tx_ls(&packet);
+    canbus->tx_q_ls(&packet);
 }
 
 void LCD::update(char text[], uint8_t len, uint8_t pos) {
@@ -149,7 +150,7 @@ void LCD::disable_force() {
     CANPacket packet;
     packet.id = LCD_CONTROL_MESSAGE;
     memcpy(&packet.data, &disable[0], 8 * sizeof(uint8_t));
-    canbus->tx_ls(&packet);
+    canbus->tx_q_ls(&packet);
 }
 
 void LCD::start() {
@@ -176,7 +177,7 @@ void LCD::periodic() {
     CANPacket *packet = lcd_data_queue.try_get();
     if (packet == nullptr) return;
 
-    canbus->tx_ls(packet);
+    canbus->tx_q_ls(packet);
     lcd_data_queue.free(packet);
 }
 
