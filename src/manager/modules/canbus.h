@@ -24,6 +24,7 @@ struct CANPacket {
 
 class CANbus : public Subsystem::Module {
 public:
+    typedef enum Bus {LS, HS} Bus;
     class Listener {
         public:
             virtual void listener_update(CANPacket *packet);
@@ -43,6 +44,7 @@ public:
     void start();
     void stop();
 
+    void addRxFilter(Bus bus, uint32_t mask, uint32_t filter);
 protected:
     EventFlags txrx_flags;
 
