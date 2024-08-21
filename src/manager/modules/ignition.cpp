@@ -5,7 +5,7 @@ Ignition::Ignition() {
     subsystem = Subsystem::getInstance();
     canbus = CANbus::getInstance();
     canbus->addListener(this);
-    canbus->addRxFilter(CANbus::Bus::LS, ((1 << 29) - 1), CFE_CAN_IGNITION_MSG_ID);
+    canbus->addRxFilter(CANbus::Bus::LS, CFE_CAN_IGNITION_MSG_ID, ((1<<29)-1));
     switchPos = KeyOut;
     EventQueue *queue = mbed_event_queue();
     periodicEvent = new Event<void()>(queue, callback(this, &Ignition::periodic));

@@ -1,4 +1,7 @@
 #include "subsystem.h"
+#include "manager/modules/canbus.h"
+#include "manager/modules/lcd.h"
+#include "manager/modules/lcd_welcome_msg.h"
 #include "mbed_shared_queues.h"
 #include <algorithm>
 #include <vector>
@@ -7,6 +10,11 @@ Subsystem::Subsystem() {
     systemQueue = mbed_event_queue();
     modules = new std::vector<Module*>;
     registry = new RealSemaphore;
+
+    // This defines the load and unload order of the modules.
+    modules->push_back(CANbus::getInstance());
+    modules->push_back(Volvo::LCD::getInstance());
+    modules->push_back(LCDWelcomeMessage::getInstance());
 }
 
 bool Subsystem::start() {

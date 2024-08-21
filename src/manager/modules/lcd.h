@@ -21,8 +21,8 @@ public:
     void enable();
     void disable();
     void clear();
-    void update(char text[], uint8_t len, uint8_t pos);
-    void print(char text[], int len);
+    void update(const char text[], uint8_t len, uint8_t pos);
+    void print(const char text[], int len);
     void periodic();
 
     void start();

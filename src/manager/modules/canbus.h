@@ -44,7 +44,7 @@ public:
     void start();
     void stop();
 
-    void addRxFilter(Bus bus, uint32_t mask, uint32_t filter);
+    void addRxFilter(Bus bus, uint32_t id, uint32_t mask);
 protected:
     EventFlags txrx_flags;
 

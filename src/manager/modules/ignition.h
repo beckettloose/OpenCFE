@@ -13,8 +13,8 @@
 #define CFE_CAN_IGNITION_FILTER_KP0 0b00000000
 
 class Ignition : public Subsystem::Module, public CANbus::Listener {
-enum IgnSwitchPos {KeyOut, KP0, KPI, KPII, KPIII};
 public:
+    enum KeyPos {KeyOut, KP0, KPI, KPII, KPIII};
     static Ignition* getInstance() {
         static Ignition instance;
         return &instance;
@@ -32,12 +32,12 @@ public:
     // Key in, accessory mode = KPI
     // Key in, run mode = KPII
     // Key in, starter mode = KPIII
-    virtual IgnSwitchPos getKeyPos() { return switchPos; }
+    virtual KeyPos getKeyPos() { return switchPos; }
 private:
     Ignition();
     Subsystem* subsystem;
     CANbus* canbus;
-    IgnSwitchPos switchPos;
+    KeyPos switchPos;
 
     Event<void()>* periodicEvent;
     void periodic();

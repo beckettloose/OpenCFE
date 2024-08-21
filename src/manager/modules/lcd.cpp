@@ -46,7 +46,7 @@ void LCD::clear_force() {
     canbus->tx_q_ls(&packet);
 }
 
-void LCD::update(char text[], uint8_t len, uint8_t pos) {
+void LCD::update(const char text[], uint8_t len, uint8_t pos) {
     if (!enabled) return;
 
     char str[8] = {0};
@@ -65,7 +65,7 @@ void LCD::update(char text[], uint8_t len, uint8_t pos) {
     addToQueue(LCD_DATA_MESSAGE, data);
 }
 
-void LCD::print(char text[], int len) {
+void LCD::print(const char text[], int len) {
     if (!enabled) return;
 
     char str[34] = {0};

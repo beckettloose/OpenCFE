@@ -81,6 +81,23 @@ void CANbus::stop() {
     subsystem->registry->release();
 }
 
+void CANbus::addRxFilter(Bus bus, uint32_t id, uint32_t mask) {
+    switch (bus) {
+        case LS: {
+            CAN_ls->filter(id, mask, CANFormat::CANExtended);
+            break;
+        };
+        case HS: {
+            CAN_hs->filter(id, mask, CANFormat::CANExtended);
+            break;
+        };
+        default: {
+            // TODO: error
+            break;
+        };
+    }
+}
+
 void CANbus::periodic() {
     // update our listeners with every queued message
     // reads up to a predetermined number of messages from the queue at a time.
