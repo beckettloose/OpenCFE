@@ -137,7 +137,7 @@ void CANbus::txrx_loop() {
     }
 }
 
-int CANbus::txrx_try_read_hs() {
+int CANbus::txrx_try_read_ls() {
     int ret = CAN_ls->read(rx_frame);
 
     if (ret) {
@@ -151,7 +151,7 @@ int CANbus::txrx_try_read_hs() {
     return ret;
 }
 
-int CANbus::txrx_try_read_ls() {
+int CANbus::txrx_try_read_hs() {
     int ret = CAN_hs->read(rx_frame);
 
     if (ret) {
@@ -179,7 +179,7 @@ bool CANbus::txrx_try_write_ls() {
 
 bool CANbus::txrx_try_write_hs() {
     // check if we can write frames
-    bool ret = !tx_queue_ls.empty();
+    bool ret = !tx_queue_hs.empty();
 
     if (ret) {
         CANPacket *packet = tx_queue_hs.try_get();
