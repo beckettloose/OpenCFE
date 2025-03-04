@@ -37,6 +37,7 @@ public:
     // keeps track of the number of active modules.
     RealSemaphore* registry;
 
+    void init();
     bool start();
     bool stop();
 

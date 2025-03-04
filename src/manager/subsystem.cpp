@@ -10,7 +10,9 @@ Subsystem::Subsystem() {
     systemQueue = mbed_event_queue();
     modules = new std::vector<Module*>;
     registry = new RealSemaphore;
+}
 
+void Subsystem::init() {
     // This defines the load and unload order of the modules.
     modules->push_back(CANbus::getInstance());
     modules->push_back(Volvo::LCD::getInstance());
