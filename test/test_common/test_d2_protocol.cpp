@@ -156,6 +156,9 @@ TEST_SUITE("D2 Frame Encoder") {
 
         bool arraysAreEqual = (*frames == correctFrame);
 
+        INFO("Expected Frame: ", *dequeToString(&correctFrame));
+        INFO("Generated Frame: ", *dequeToString(frames));
+
         CHECK(frames->size() == correctFrame.size());
         CHECK(arraysAreEqual);
     }
