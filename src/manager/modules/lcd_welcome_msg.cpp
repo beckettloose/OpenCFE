@@ -28,7 +28,6 @@ LCDWelcomeMessage::LCDWelcomeMessage() {
 }
 
 void LCDWelcomeMessage::start() {
-    subsystem->registry->acquire();
     periodicEvent->post();
 }
 
@@ -38,7 +37,6 @@ void LCDWelcomeMessage::stop() {
     showGoodbyeEvent->cancel();
     hideMessageEvent->cancel();
     hideMessage();
-    subsystem->registry->release();
 }
 
 void LCDWelcomeMessage::periodic() {

@@ -1,8 +1,6 @@
 #include "power_state_manager.h"
 #include "DigitalOut.h"
 #include "PinNames.h"
-#include "ThisThread.h"
-#include "mbed_power_mgmt.h"
 
 PowerStateManager::PowerStateManager() {
     flags = new EventFlags;

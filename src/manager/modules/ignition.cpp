@@ -35,13 +35,11 @@ void Ignition::listener_update(CANPacket *packet) {
 }
 
 void Ignition::start() {
-    subsystem->registry->acquire();
     periodicEvent->post();
 }
 
 void Ignition::stop() {
     periodicEvent->cancel();
-    subsystem->registry->release();
 }
 
 void Ignition::periodic() {

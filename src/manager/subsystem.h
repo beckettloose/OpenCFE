@@ -1,7 +1,6 @@
 #ifndef __SUBSYSTEM_H
 #define __SUBSYSTEM_H
 
-#include "libraries/real_semaphore.h"
 #include <mbed.h>
 #include <vector>
 
@@ -33,9 +32,6 @@ public:
         STARTING,
         STARTED
     } State;
-
-    // keeps track of the number of active modules.
-    RealSemaphore* registry;
 
     void init();
     bool start();

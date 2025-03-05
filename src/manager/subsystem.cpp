@@ -10,7 +10,6 @@
 Subsystem::Subsystem() {
     systemQueue = mbed_event_queue();
     modules = new std::vector<Module*>;
-    registry = new RealSemaphore;
     _subsystemLED = new DigitalOut(PB_7);
 }
 

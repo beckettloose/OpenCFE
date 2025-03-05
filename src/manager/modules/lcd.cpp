@@ -154,7 +154,6 @@ void LCD::disable_force() {
 }
 
 void LCD::start() {
-    subsystem->registry->acquire();
     purgeQueue();
     clear_force();
     disable_force();
@@ -168,7 +167,6 @@ void LCD::stop() {
     purgeQueue();
     clear_force();
     disable_force();
-    subsystem->registry->release();
 }
 
 void LCD::periodic() {
