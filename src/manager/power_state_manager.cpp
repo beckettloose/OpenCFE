@@ -1,4 +1,6 @@
 #include "power_state_manager.h"
+#include "DigitalOut.h"
+#include "PinNames.h"
 #include "ThisThread.h"
 #include "mbed_power_mgmt.h"
 
@@ -13,6 +15,8 @@ PowerStateManager::PowerStateManager() {
     _systemEventQueue = mbed_event_queue();
 
     _subsystem = Subsystem::getInstance();
+
+    _psmLED = new DigitalOut(PB_0);
 }
 
 void PowerStateManager::start() {
@@ -35,11 +39,13 @@ void PowerStateManager::start() {
 
     // Enable the subsystem
     requestSubsystemStartup();
+    _psmLED->write(1);
 
     // enter an infinite loop
     while (true) {
         // block until the enable flag is set
         flags->wait_all(CFE_PSM_FLAG_MAIN_WAKEUP, osWaitForever, false);
+        _psmLED->write(1);
 
         // TODO: determine if we should start the subsystem thread automatically
     }
@@ -108,6 +114,7 @@ void PowerStateManager::_subsystemTask() {
             shouldSetCleanFlag = false;
             flags->set(CFE_PSM_FLAG_MAIN_SUB_CLEAN);
             flags->clear(CFE_PSM_FLAG_SUB_ENABLE | CFE_PSM_FLAG_SUB_SHUTDOWN);
+            _psmLED->write(0);
         }
     }
 }

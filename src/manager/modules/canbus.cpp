@@ -67,6 +67,7 @@ void CANbus::addListener(CANbus::Listener *listener) {
 }
 
 void CANbus::start() {
+    canLED->write(1);
     subsystem->registry->acquire();
     periodicEvent->post();
     txrx_flags.set(CFE_CAN_FLAG_TXRX_RUN);
@@ -79,6 +80,7 @@ void CANbus::stop() {
     txrx_flags.wait_all(CFE_CAN_FLAG_MAIN_TXRX_CLEAN, 2000, false);
     periodicEvent->cancel();
     subsystem->registry->release();
+    canLED->write(0);
 }
 
 void CANbus::addRxFilter(Bus bus, uint32_t id, uint32_t mask) {

@@ -47,6 +47,8 @@ private:
     Subsystem();
     EventQueue* systemQueue;
 
+    DigitalOut* _subsystemLED;
+
     // order-dependent synchronusly controlled modules.
     std::vector<Subsystem::Module*>* modules;
 

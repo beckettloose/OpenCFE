@@ -1,6 +1,7 @@
 #ifndef __CANBUS_H
 #define __CANBUS_H
 
+#include "DigitalOut.h"
 #include "EventFlags.h"
 #include "manager/subsystem.h"
 #include <cstdint>
@@ -54,6 +55,8 @@ private:
     CAN* CAN_hs;
 
     Subsystem* subsystem;
+
+    DigitalOut* canLED;
 
     void periodic();
     Event<void()>* periodicEvent;
