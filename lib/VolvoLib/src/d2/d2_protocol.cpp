@@ -1,4 +1,5 @@
 #include "d2_protocol.h"
+#include <cassert>
 #include <cstdint>
 #include <cstring>
 #include <deque>
@@ -16,10 +17,7 @@ void D2_Protocol::endSession() {}
 
 uint32_t D2_Protocol::getNumFrames(uint32_t numBytes) {
     // a zero length message is not part of the known D2 spec
-    if (numBytes == 0) {
-        // TODO: throw an error
-        return 0;
-    }
+    assert(numBytes > 0);
 
     // each d2 CAN frame can hold 7 bytes of message data.
     uint32_t numFrames = numBytes / 7;
@@ -35,9 +33,7 @@ uint32_t D2_Protocol::getNumFrames(uint32_t numBytes) {
 
 std::deque<uint8_t>* D2_Protocol::messageToFrames(std::deque<uint8_t> *data) {
     // Validate inputs
-    if (data == nullptr) {
-        // error, invalid pointer or no data
-    }
+    assert(data != nullptr);
 
     // Temporary variables for frame generation
     FrameHeader header;
@@ -73,9 +69,8 @@ std::deque<uint8_t>* D2_Protocol::messageToFrames(std::deque<uint8_t> *data) {
                     data->pop_front();
                 }
             } else if (frame == (numFrames - 1)) { // Special case for the last frame
-                if (data->size() > 7) {
-                    // problem because we assume this to be false
-                }
+                assert(data->size() <= 7);
+
                 header.type = FrameHeader::Type::EXT_LAST;
                 header.numSigBytes = data->size();
                 frames->push_back(buildFrameHeader(&header));
@@ -107,9 +102,7 @@ std::deque<uint8_t>* D2_Protocol::messageToFrames(std::deque<uint8_t> *data) {
 
 std::deque<uint8_t>* D2_Protocol::unpackMessage(std::deque<uint8_t> *data) {
     // make sure the size of our input array is valid
-    if ((data->size() % 8) != 0) {
-        // error, we do not have proper frames
-    }
+    assert((data->size() % 8) == 0);
 
     uint32_t numFrames = data->size() / 8;
 
@@ -119,7 +112,8 @@ std::deque<uint8_t>* D2_Protocol::unpackMessage(std::deque<uint8_t> *data) {
 
     std::deque<uint8_t>* message = new std::deque<uint8_t>();
 
-    uint8_t lastSequenceNumber = 0;
+    // NOTE: this might need to change based on the sequence number range
+    uint8_t lastSequenceNumber = -1;
 
     for (uint32_t frame = 0; frame < numFrames; frame++) {
         header = FrameHeader();
@@ -129,11 +123,9 @@ std::deque<uint8_t>* D2_Protocol::unpackMessage(std::deque<uint8_t> *data) {
 
         // if not first or last frame, check sequence number
         if (!((frame == 0) || (frame == (numFrames - 1)))) {
-            uint8_t nextSequenceNumber = getNextSeqNumber(lastSequenceNumber);
-            if (header.sequenceNumber != nextSequenceNumber) {
-                // bad things have happened
-            }
-            lastSequenceNumber = nextSequenceNumber;
+            uint8_t expectedSequenceNumber = getNextSeqNumber(lastSequenceNumber);
+            assert(header.sequenceNumber == expectedSequenceNumber);
+            lastSequenceNumber = header.sequenceNumber;
         }
         // if last frame, only read significant bytes
         if (frame == (numFrames - 1)) {
@@ -159,9 +151,7 @@ D2_Protocol::FrameHeader D2_Protocol::parseFrameHeader(uint8_t *firstByte) {
     // multi last: mask 0xF8, filter 0x48, last3 num sig bytes
 
     // this pointer should be valid
-    if (firstByte == nullptr) {
-        // TODO: Fix
-    }
+    assert(firstByte != nullptr);
 
     D2_Protocol::FrameHeader header;
 
@@ -178,7 +168,7 @@ D2_Protocol::FrameHeader D2_Protocol::parseFrameHeader(uint8_t *firstByte) {
         header.numSigBytes = (*firstByte & 0b111);
     } else {
         // Throw error if we don't match any conditions
-        // TODO: Fix
+        assert(false);
     }
 
     return header;
@@ -191,9 +181,7 @@ uint8_t D2_Protocol::buildFrameHeader(D2_Protocol::FrameHeader *header) {
     // multi last: 0x48 + num sig bytes (up to 7)
 
     // Make sure our pointer is valid
-    if (header == nullptr) {
-        // TODO: Fix
-    }
+    assert(header != nullptr);
 
     uint8_t headerByte = 0;
 
@@ -203,9 +191,8 @@ uint8_t D2_Protocol::buildFrameHeader(D2_Protocol::FrameHeader *header) {
     switch (header->type) {
         case FrameHeader::Type::SINGLE: {
             // number of sig bytes should always be [1,7]
-            if (numSigBytes < 1 || numSigBytes > 7) {
-                // TODO: Fix
-            }
+            assert(numSigBytes >= 1 && numSigBytes <= 7);
+
             headerByte = 0xC8 + numSigBytes;
             break;
         };
@@ -215,22 +202,21 @@ uint8_t D2_Protocol::buildFrameHeader(D2_Protocol::FrameHeader *header) {
         };
         case FrameHeader::Type::EXT_MIDDLE: {
             // sequence number should always be [0,7] (or maybe 1,7??)
-            if (sequenceNum > 7) {
-                // TODO: Fix
-            }
+            // TODO: figure out which sequence range is correct
+            assert(sequenceNum >= 0 && sequenceNum <= 7);
+
             headerByte = 0x08 + sequenceNum;
             break;
         };
         case FrameHeader::Type::EXT_LAST: {
             // number of sig bytes should always be [1,7]
-            if (numSigBytes < 1 || numSigBytes > 7) {
-                // TODO: Fix
-            }
+            assert(numSigBytes >= 1 && numSigBytes <= 7);
+
             headerByte = 0x48 + numSigBytes;
             break;
         };
         default: {
-            // TODO: Fix
+            assert(false);
         };
     }
 
