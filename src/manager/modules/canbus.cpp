@@ -2,6 +2,7 @@
 #include "InterfaceCAN.h"
 #include "can_helper.h"
 
+#include <cassert>
 #include <cstring>
 #include <mbed.h>
 
@@ -141,8 +142,8 @@ int CANbus::txrx_try_read_ls() {
     int ret = CAN_ls->read(rx_frame);
 
     if (ret) {
-        // TODO: check if we can write to the queue
         CANPacket *packet = rx_queue.try_alloc();
+        assert(packet != nullptr);
         packet->id = rx_frame.id;
         memcpy(&packet->data[0], &rx_frame.data[0], 8 * sizeof(uint8_t));
         rx_queue.put(packet);
@@ -155,8 +156,8 @@ int CANbus::txrx_try_read_hs() {
     int ret = CAN_hs->read(rx_frame);
 
     if (ret) {
-        // TODO: check if we can write to the queue
         CANPacket *packet = rx_queue.try_alloc();
+        assert(packet != nullptr);
         packet->id = rx_frame.id;
         memcpy(&packet->data[0], &rx_frame.data[0], 8 * sizeof(uint8_t));
         rx_queue.put(packet);
@@ -166,27 +167,27 @@ int CANbus::txrx_try_read_hs() {
 }
 
 bool CANbus::txrx_try_write_ls() {
-    // check if we can write frames
-    bool ret = !tx_queue_ls.empty();
+    // check if there are pending frames to write
+    bool pendingFrames = !tx_queue_ls.empty();
 
-    if (ret) {
+    if (pendingFrames) {
         CANPacket *packet = tx_queue_ls.try_get();
         tx_ls(packet);
     }
 
-    return ret;
+    return pendingFrames;
 }
 
 bool CANbus::txrx_try_write_hs() {
-    // check if we can write frames
-    bool ret = !tx_queue_hs.empty();
+    // check if there are pending frames to write
+    bool pendingFrames = !tx_queue_hs.empty();
 
-    if (ret) {
+    if (pendingFrames) {
         CANPacket *packet = tx_queue_hs.try_get();
         tx_hs(packet);
     }
 
-    return ret;
+    return pendingFrames;
 }
 
 void CANbus::tx_build_message(CANPacket *packet) {
