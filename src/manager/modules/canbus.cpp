@@ -76,7 +76,7 @@ void CANbus::start() {
 void CANbus::stop() {
     allow_queue_tx = false;
     txrx_flags.set(CFE_CAN_FLAG_TXRX_SHUTDOWN);
-    txrx_flags.wait_all(CFE_CAN_FLAG_MAIN_TXRX_CLEAN, osWaitForever, false);
+    txrx_flags.wait_all(CFE_CAN_FLAG_MAIN_TXRX_CLEAN, 2000, false);
     periodicEvent->cancel();
     subsystem->registry->release();
 }

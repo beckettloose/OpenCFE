@@ -64,6 +64,7 @@ void PowerStateManager::requestFullSystemStartup() {
 }
 
 void PowerStateManager::requestFullSystemShutdown() {
+    flags->set(CFE_PSM_FLAG_SUB_SHUTDOWN);
 }
 
 void PowerStateManager::canWakeupISR() {
@@ -87,10 +88,11 @@ void PowerStateManager::_subsystemTask() {
         /*printf("PSM: Cleared subsystem clean flag\n");*/
 
         if (flags->get() & CFE_PSM_FLAG_SUB_SHUTDOWN) {
-            /*printf("PSM: Got subsystem shutdown flag, stopping\n");*/
+            printf("PSM: Got subsystem shutdown flag, stopping\n");
             _subsystem->stop();
 
             if (_subsystem->getState() == Subsystem::State::STOPPED) {
+                printf("PSM: all modules stopped, setting 'clean' flag\n");
                 shouldSetCleanFlag = true;
             }
         } else {
@@ -98,7 +100,7 @@ void PowerStateManager::_subsystemTask() {
             _subsystem->start();
         }
 
-        /*printf("PSM: Dispatching system event queue for 10000ms\n");*/
+        printf("PSM: Dispatching system event queue for 10000ms\n");
         _systemEventQueue->dispatch_for(10000ms);
 
         if (shouldSetCleanFlag) {

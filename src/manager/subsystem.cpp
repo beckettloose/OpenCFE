@@ -52,8 +52,8 @@ void Subsystem::_startModules() {
 
 void Subsystem::_stopModules() {
     std::for_each(
-        modules->end(),
-        modules->begin(),
+        modules->rbegin(),
+        modules->rend(),
         [](const auto & module){
             module->stop();
         }
