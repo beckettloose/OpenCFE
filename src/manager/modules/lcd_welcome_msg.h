@@ -26,6 +26,8 @@ private:
     Ignition* ignition;
     Ignition::KeyPos lastKeyPos;
 
+    EventQueue* queue;
+
     Event<void()>* periodicEvent;
     void periodic();
 

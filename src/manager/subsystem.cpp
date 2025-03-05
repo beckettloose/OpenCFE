@@ -1,5 +1,6 @@
 #include "subsystem.h"
 #include "manager/modules/canbus.h"
+#include "manager/modules/ignition.h"
 #include "manager/modules/lcd.h"
 #include "manager/modules/lcd_welcome_msg.h"
 #include "mbed_shared_queues.h"
@@ -16,6 +17,7 @@ void Subsystem::init() {
     // This defines the load and unload order of the modules.
     modules->push_back(CANbus::getInstance());
     modules->push_back(Volvo::LCD::getInstance());
+    modules->push_back(Ignition::getInstance());
     modules->push_back(LCDWelcomeMessage::getInstance());
 }
 

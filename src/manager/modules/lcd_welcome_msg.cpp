@@ -12,7 +12,7 @@ LCDWelcomeMessage::LCDWelcomeMessage() {
     ignition = Ignition::getInstance();
     lastKeyPos = Ignition::KeyOut;
 
-    EventQueue* queue = mbed_event_queue();
+    queue = mbed_event_queue();
     periodicEvent = new Event<void()>(queue, callback(this, &LCDWelcomeMessage::periodic));
     periodicEvent->period(250ms);
 
