@@ -2,8 +2,12 @@
     "target_overrides": {
         "*": {
             "platform.callback-nontrivial": true
+
         },
-        "nucleo_f746zg": {
+        "NUCLEO_F767ZI": {
+            "events.shared-dispatch-from-application": true,
+            "events.shared-eventsize": 2048,
+            "platform.stdio-baud-rate": 115200,
             "target.c_lib": "small",
             "target.printf_lib": "minimal-printf",
             "platform.minimal-printf-enable-floating-point": false,
