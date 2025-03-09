@@ -1,4 +1,5 @@
 #include "canbus.h"
+#include "DigitalOut.h"
 #include "InterfaceCAN.h"
 #include "can_helper.h"
 
@@ -16,6 +17,8 @@ CANbus::CANbus() {
     // Set up the high speed bus (CAN HS, 250kbps [500 on MY05-])
     CAN_hs = new CAN(PB_5, PB_6);
     CAN_hs->frequency(250000);
+
+    canLED = new DigitalOut(PB_14);
 
     subsystem = Subsystem::getInstance();
     EventQueue *queue = mbed_event_queue();

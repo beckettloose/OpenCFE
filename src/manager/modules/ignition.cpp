@@ -40,6 +40,9 @@ void Ignition::start() {
 
 void Ignition::stop() {
     periodicEvent->cancel();
+
+    sleepEventCanceled = false;
+    sleepEventPosted = false;
 }
 
 void Ignition::periodic() {
