@@ -1,37 +1,42 @@
-# Created by https://www.toptal.com/developers/gitignore/api/platformio,git
-# Edit at https://www.toptal.com/developers/gitignore?templates=platformio,git
 
-### Git ###
-# Created by git for backups. To disable backups in Git:
-# $ git config --global mergetool.keepBackup false
-*.orig
+# CLion build dirs
+cmake-build-*/
 
-# Created by git when using merge tools for conflicts
-*.BACKUP.*
-*.BASE.*
-*.LOCAL.*
-*.REMOTE.*
-*_BACKUP_*.txt
-*_BASE_*.txt
-*_LOCAL_*.txt
-*_REMOTE_*.txt
+# User-specific CLion stuff
+.idea/**/workspace.xml
+.idea/**/tasks.xml
+.idea/**/usage.statistics.xml
+.idea/**/dictionaries
+.idea/**/shelf
+.idea/runConfigurations
 
-### PlatformIO ###
-.pioenvs
-.piolibdeps
-.clang_complete
-.gcc-flags.json
-.pio
+# Generated CLion files
+.idea/**/contentModel.xml
 
-# End of https://www.toptal.com/developers/gitignore/api/platformio,git
+# Sensitive or high-churn CLion files
+.idea/**/dataSources/
+.idea/**/dataSources.ids
+.idea/**/dataSources.local.xml
+.idea/**/sqlDataSources.xml
+.idea/**/dynamic.xml
+.idea/**/uiDesigner.xml
+.idea/**/dbnavigator.xml
 
-# Various Caches
-.cache
+# Gradle
+.idea/**/gradle.xml
+.idea/**/libraries
 
-# Compilation Database
-compile_commands.json
+# VS Code build dir
+build/
 
-# TODO: Update the gitignore
+# VS Code config files
+.vscode/
 
-# Build files
-build
+# Python stuff
+*.pyc
+
+# Mac stuff
+.DS_Store
+
+# Cache
+.cache/

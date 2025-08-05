@@ -1,5 +1,3 @@
-// mbed rtos events example
-
 #include <mbed.h>
 #include <mbed_events.h>
 

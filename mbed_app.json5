@@ -2,7 +2,6 @@
     "target_overrides": {
         "*": {
             "platform.callback-nontrivial": true
-
         },
         "NUCLEO_F767ZI": {
             "events.shared-dispatch-from-application": true,
