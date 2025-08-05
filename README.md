@@ -15,6 +15,7 @@ Feature availability depends on platform, model year, and options, but some exam
 - Allow fog lights with high beams (Without changing CEM carconfig)
 
 ## Project Status (Software Only)
+- [x] Migrate to Mbed-CE
 - [x] Begin testing basic backend system for task scheduling and subsystem control
 - [ ] Basic serial CLI for testing and diagnostics (with features like Cisco IOS-style synchronus logging)
 - [ ] Establish CAN communications with vehicle and test simple functions
@@ -23,43 +24,53 @@ Feature availability depends on platform, model year, and options, but some exam
 - [ ] Create full list of planned subsystems and which ones are supported per vehicle
 - [ ] Find way to deal with K-Line keepalive on 99-04 vehicles (or bypass relay)
 - [ ] Determine processor specs required for production hardware revision
-- [ ] Migrate to Mbed-CE (Waiting for platformio to support it first, but old Mbed is approaching EoL)
 
 ## License and Open Source Guarantee Statement
 This project is distributed with a GNU GPLv2 License. See the LICENSE file for more information.
 
-The OpenCFE project is built to embrace the ideas of open source hardware and software to avoid situations with similar products in the past where support was dropped and rights were sold to a company that wasn't interested in continuing development. This limits what the Volvo community can gain by making the research, hardware, and software behind them private. This project is committed to staying fully open source for as long as it exists, and will not be sold off or made private.
+The OpenCFE project is committed to staying completely open-source forever. This should avoid a potential situation where support for OpenCFE is dropped and the rights get sold to a company that isn't interested in continuing development. There is very little reason for a project like this to be private, as it limits what the Volvo community can gain from the research and development efforts of this project. Additionally, it allows the community to contribute their own changes and improvements to make OpenCFE better for everyone.
 
 # Development
-
-## Setting up Build Environment
-1. Install PlatformIO (Using Python 3.11 for Mbed compatability)
-2. Clone this repository to a suitable location
-
-## Building
-To build the software, run the following command.
+When cloning the repo, be sure to either clone with `--recurse-submodules` or run the following commands if you have already cloned the repo.
 
 ```sh
-pio run
+git submodule init
+git submodule update
 ```
 
-## Generating `compile_commands.json`
-Some editors like Neovim need a file called `compile_commands.json` to tell the LSP how to build the program. To generate this file, run the following command.
+## Setting up Build Environment
+1. Ensure you have `cmake` and `ninja-build` installed.
+2. Install the gcc-arm compiler from the [Arm Toolchain Downloads](https://developer.arm.com/downloads/-/arm-gnu-toolchain-downloads) page.
+
+To configure the repository run the following commands from the repo root directory.
 
 ```sh
-pio run -t compiledb
+mkdir build && cd build
+cmake .. -GNinja -DCMAKE_BUILD_TYPE=Develop -DMBED_TARGET=NUCLEO_F767ZI
+```
+
+If you use an editor or LSP that requires a `compile_commands.json` file, you can generate it by adding `-DCMAKE_EXPORT_COMPILE_COMMANDS=ON` to the end if the cmake command above.
+
+## Building
+To build the software, run the following command in the `build/` directory
+
+```sh
+ninja
 ```
 
 ## Flashing Firmware
-To flash the firmware to the hardware, connect the device to your computer and run the following command.
+To flash the firmware to the hardware, connect the device to your computer and run the following command from the build directory.
 
 ```sh
-pio run -t upload
+ninja flash-OpenCFE
 ```
 
 ## Running Unit Tests
+
+Warning: unit tests have not been migrated from platformio yet!
+
 To run the unit tests for the included libraries, run the following command.
 
 ```sh
-pio test -e native
+:
 ```
