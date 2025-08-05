@@ -3,7 +3,7 @@
 
 #include "DigitalOut.h"
 #include "EventFlags.h"
-#include "manager/subsystem.h"
+#include "../subsystem.h"
 #include <cstdint>
 
 #include <mbed.h>

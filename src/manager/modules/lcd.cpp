@@ -1,7 +1,7 @@
 #include "lcd.h"
 #include "EventQueue.h"
-#include "manager/modules/canbus.h"
-#include "manager/subsystem.h"
+#include "canbus.h"
+#include "../subsystem.h"
 #include "mbed_shared_queues.h"
 
 namespace Volvo {

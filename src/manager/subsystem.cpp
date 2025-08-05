@@ -1,8 +1,8 @@
 #include "subsystem.h"
-#include "manager/modules/canbus.h"
-#include "manager/modules/ignition.h"
-#include "manager/modules/lcd.h"
-#include "manager/modules/lcd_welcome_msg.h"
+#include "modules/canbus.h"
+#include "modules/ignition.h"
+#include "modules/lcd.h"
+#include "modules/lcd_welcome_msg.h"
 #include "mbed_shared_queues.h"
 #include <algorithm>
 #include <vector>

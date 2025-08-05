@@ -3,7 +3,7 @@
 
 #include <mbed.h>
 #include "DigitalOut.h"
-#include "manager/subsystem.h"
+#include "subsystem.h"
 
 #define CFE_PSM_FLAG_MAIN_WAKEUP (1UL << 1) // Allows the main thread loop to run.
 #define CFE_PSM_FLAG_MAIN_SHUTDOWN (1UL << 2) // Signals the main thread to begin shutting down.

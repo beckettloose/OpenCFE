@@ -1,8 +1,8 @@
 #include "lcd_welcome_msg.h"
 #include "Event.h"
 #include "EventQueue.h"
-#include "manager/modules/ignition.h"
-#include "manager/modules/lcd.h"
+#include "ignition.h"
+#include "lcd.h"
 #include "mbed_shared_queues.h"
 #include <cstring>
 

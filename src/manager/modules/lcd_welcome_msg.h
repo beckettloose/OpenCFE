@@ -3,9 +3,9 @@
 
 #include <mbed.h>
 
-#include "manager/modules/ignition.h"
-#include "manager/modules/lcd.h"
-#include "manager/subsystem.h"
+#include "ignition.h"
+#include "lcd.h"
+#include "../subsystem.h"
 
 #define CFE_LCDWELCOME_TIME 5s
 #define CFE_LCDWELCOME_KPII_HIDE true

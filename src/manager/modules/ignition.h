@@ -1,8 +1,8 @@
 #ifndef __IGNITION_H
 #define __IGNITION_H
 
-#include "manager/modules/canbus.h"
-#include "manager/subsystem.h"
+#include "canbus.h"
+#include "../subsystem.h"
 
 // TODO: Figure out this message ID
 #define CFE_CAN_IGNITION_MSG_ID 0x0

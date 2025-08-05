@@ -3,8 +3,6 @@
 #include <mbed.h>
 #include <mbed_events.h>
 
-#include <VolvoLib.h>
-
 #include "manager/power_state_manager.h"
 
 int main() {

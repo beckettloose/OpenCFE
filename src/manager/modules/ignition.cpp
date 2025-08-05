@@ -1,5 +1,5 @@
 #include "ignition.h"
-#include "manager/power_state_manager.h"
+#include "../power_state_manager.h"
 
 Ignition::Ignition() {
     subsystem = Subsystem::getInstance();

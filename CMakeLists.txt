@@ -1,0 +1,98 @@
+#
+# Mbed CE Example CMakeLists.txt
+#
+cmake_minimum_required(VERSION 3.19)
+cmake_policy(VERSION 3.19...3.22)
+
+#### Initialize Mbed OS build system. ####
+######################################################################################################
+### Block of including .json5 files. Files of this block must be included before the app.cmake
+
+#[[ Set path of mbed_app.json (necessary at all times) ]]
+set(MBED_APP_JSON_PATH mbed_app.json5)
+
+###---------------------------------------------------------------------------------------------------
+#[[ This part is dedicated for custom targets only! The settings below activate targets from
+    custom_targets.json5 and upload method config. If custom targets are not used the lines below should be commented. ]]
+
+#[[ Here set path for custom_targets.json5 (this is our default) ]]
+#set(CUSTOM_TARGETS_JSON_PATH custom_targets/custom_targets.json5)
+
+#[[ Here you can set path for custom upload config .cmake (optional example) ]]
+#set(CUSTOM_UPLOAD_CFG_PATH ${CMAKE_SOURCE_DIR}/${MBED_TARGET}/${MBED_TARGET}.cmake)
+
+#[[ Note: For custom target you need also an upload method and we have few options how you can do that
+    - use the variable CUSTOM_UPLOAD_CFG_PATH above to set the location of your config file
+    - use the default expected path for custom targets upload method config file:
+      MY_PROJECT/custom_targets/upload_method_cfg
+    - of course you can set upload method parameters directly via cmake in this file
+   For more visit https://github.com/mbed-ce/mbed-os/wiki/Upload-Methods ]]
+
+### End of block
+######################################################################################################
+
+### Include Mbed toolchain setup file
+include(mbed-os/tools/cmake/mbed_toolchain_setup.cmake)
+
+### Set up your project.
+# The project name will be made available in the ${PROJECT_NAME} variable.
+# If you like, you can specify a version here, which CMake will make available in the ${PROJECT_VERSION} variable.
+project(OpenCFE
+        # VERSION 1.0.0
+        LANGUAGES C CXX ASM)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+### Include Mbed project setup file
+include(mbed_project_setup)
+
+######################################################################################################
+### Block of including project folders
+
+#[[ If using a custom target, the subdirectory containing the custom target must be included before
+    the mbed-os subdir, otherwise the next line should be commented]]
+#add_subdirectory(custom_targets)
+
+###--------------------------------------------------------------------------------------------------
+## Add mbed-os subdirectory (necessary everytime)
+add_subdirectory(mbed-os)
+
+###--------------------------------------------------------------------------------------------------
+## Add another subdirectory, for example subdirectory of a library (if needed)
+#add_subdirectory(YourLibrary)
+add_subdirectory(lib/VolvoLib)
+
+### End of block
+######################################################################################################
+
+### add executable (necessary everytime)
+# This will compile an elf file named the same as the project with the given source files.
+add_executable(${PROJECT_NAME}
+    src/main.cpp
+    src/manager/subsystem.cpp
+    src/manager/power_state_manager.cpp
+    src/manager/modules/canbus.cpp
+    src/manager/modules/ignition.cpp
+    src/manager/modules/lcd.cpp
+    src/manager/modules/lcd_welcome_msg.cpp
+)
+
+######################################################################################################
+### Link libraries block
+#[[For more about this configuration visit wiki page MbedOS-configuration
+https://github.com/mbed-ce/mbed-os/wiki/MbedOS-configuration#configuration-via-cmake-files]]
+
+target_link_libraries(${PROJECT_NAME} mbed-os VolvoLib)
+
+### link user library (if needed)
+#target_link_libraries(${PROJECT_NAME} YourLibrary)
+
+# This generates build rules to generate bin/hex files, and to flash the code if you have configured an
+# upload method.
+mbed_set_post_build(${PROJECT_NAME})
+#[[ Note: if you wish to use a custom linker script instead of the default Mbed one for
+   your target, you can do that with mbed_set_post_build(${PROJECT_NAME} path/to/linker_script.ld) ]]
+
+### End of block
+######################################################################################################

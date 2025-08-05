@@ -30,3 +30,8 @@
 
 # Compilation Database
 compile_commands.json
+
+# TODO: Update the gitignore
+
+# Build files
+build

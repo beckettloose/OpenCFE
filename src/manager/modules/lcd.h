@@ -1,8 +1,8 @@
 #ifndef __LCD_H
 #define __LCD_H
 
-#include "manager/modules/canbus.h"
-#include "manager/subsystem.h"
+#include "canbus.h"
+#include "../subsystem.h"
 #include <cstdint>
 
 #define LCD_CONTROL_MESSAGE 0x0160200E
