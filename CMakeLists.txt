@@ -68,29 +68,31 @@ add_subdirectory(lib/VolvoLib)
 
 ### add executable (necessary everytime)
 # This will compile an elf file named the same as the project with the given source files.
-add_executable(${PROJECT_NAME}
-    src/main.cpp
-    src/manager/subsystem.cpp
-    src/manager/power_state_manager.cpp
-    src/manager/modules/canbus.cpp
-    src/manager/modules/ignition.cpp
-    src/manager/modules/lcd.cpp
-    src/manager/modules/lcd_welcome_msg.cpp
-)
+# add_executable(${PROJECT_NAME}
+#     src/main.cpp
+#     src/manager/subsystem.cpp
+#     src/manager/power_state_manager.cpp
+#     src/manager/modules/canbus.cpp
+#     src/manager/modules/ignition.cpp
+#     src/manager/modules/lcd.cpp
+#     src/manager/modules/lcd_welcome_msg.cpp
+# )
+
+add_subdirectory(src)
 
 ######################################################################################################
 ### Link libraries block
 #[[For more about this configuration visit wiki page MbedOS-configuration
 https://github.com/mbed-ce/mbed-os/wiki/MbedOS-configuration#configuration-via-cmake-files]]
 
-target_link_libraries(${PROJECT_NAME} mbed-os VolvoLib)
+# target_link_libraries(${PROJECT_NAME} mbed-os VolvoLib)
 
 ### link user library (if needed)
 #target_link_libraries(${PROJECT_NAME} YourLibrary)
 
 # This generates build rules to generate bin/hex files, and to flash the code if you have configured an
 # upload method.
-mbed_set_post_build(${PROJECT_NAME})
+# mbed_set_post_build(${PROJECT_NAME})
 #[[ Note: if you wish to use a custom linker script instead of the default Mbed one for
    your target, you can do that with mbed_set_post_build(${PROJECT_NAME} path/to/linker_script.ld) ]]
 
