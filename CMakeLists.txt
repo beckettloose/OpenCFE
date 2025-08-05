@@ -78,7 +78,7 @@ add_subdirectory(lib/VolvoLib)
 #     src/manager/modules/lcd_welcome_msg.cpp
 # )
 
-add_subdirectory(src)
+add_subdirectory(source)
 
 ######################################################################################################
 ### Link libraries block
