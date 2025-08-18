@@ -1,4 +1,4 @@
-#include "VolvoLib/d2_protocol.h"
+#include <VolvoLib/d2_message.h>
 #include <cassert>
 #include <cstdint>
 #include <cstring>
@@ -6,16 +6,7 @@
 
 namespace Volvo {
 
-D2_Protocol::D2_Protocol() {
-    // initialize can bus and register a message filter for D2 Responses
-    // Initialize repeating keepalive event
-}
-
-void D2_Protocol::startSession() {}
-
-void D2_Protocol::endSession() {}
-
-uint32_t D2_Protocol::getNumFrames(uint32_t numBytes) {
+uint32_t D2_Message::numFrames(uint32_t numBytes) {
     // a zero length message is not part of the known D2 spec
     assert(numBytes > 0);
 
@@ -31,7 +22,7 @@ uint32_t D2_Protocol::getNumFrames(uint32_t numBytes) {
     return numFrames;
 }
 
-std::deque<uint8_t>* D2_Protocol::messageToFrames(std::deque<uint8_t> *data) {
+std::deque<uint8_t>* D2_Message::toFrames(std::deque<uint8_t> *data) {
     // Validate inputs
     assert(data != nullptr);
 
@@ -40,12 +31,12 @@ std::deque<uint8_t>* D2_Protocol::messageToFrames(std::deque<uint8_t> *data) {
     std::deque<uint8_t> *frames = new std::deque<uint8_t>;
 
     // calculate the number of frames
-    uint32_t numFrames = getNumFrames(data->size());
+    uint32_t totalFrames = numFrames(data->size());
 
-    if (numFrames == 1) { // Message can fit into 1 can frame
+    if (totalFrames == 1) { // Message can fit into 1 can frame
         header.type = FrameHeader::Type::SINGLE;
         header.numSigBytes = data->size();
-        frames->push_back(buildFrameHeader(&header));
+        frames->push_back(buildHeader(&header));
         while (!data->empty()) {
             frames->push_back(data->front());
             data->pop_front();
@@ -57,23 +48,23 @@ std::deque<uint8_t>* D2_Protocol::messageToFrames(std::deque<uint8_t> *data) {
     } else { // We need to generate a sequence of multiple frames
         uint8_t sequenceNumber = 0; // Used for keeping track of intermediate frames
 
-        for (uint32_t frame = 0; frame < numFrames; frame++) {
+        for (uint32_t frame = 0; frame < totalFrames; frame++) {
             // Reset our temporary variables
             header = FrameHeader();
 
             if (frame == 0) { // Special case for the first frame
                 header.type = FrameHeader::Type::EXT_FIRST;
-                frames->push_back(buildFrameHeader(&header));
+                frames->push_back(buildHeader(&header));
                 for (int i = 0; i < 7; i++) {
                     frames->push_back(data->front());
                     data->pop_front();
                 }
-            } else if (frame == (numFrames - 1)) { // Special case for the last frame
+            } else if (frame == (totalFrames - 1)) { // Special case for the last frame
                 assert(data->size() <= 7);
 
                 header.type = FrameHeader::Type::EXT_LAST;
                 header.numSigBytes = data->size();
-                frames->push_back(buildFrameHeader(&header));
+                frames->push_back(buildHeader(&header));
                 while (!data->empty()) {
                     frames->push_back(data->front());
                     data->pop_front();
@@ -85,14 +76,14 @@ std::deque<uint8_t>* D2_Protocol::messageToFrames(std::deque<uint8_t> *data) {
             } else { // All other cases, generate an intermediate frame
                 header.type = FrameHeader::Type::EXT_MIDDLE;
                 header.sequenceNumber = sequenceNumber;
-                frames->push_back(buildFrameHeader(&header));
+                frames->push_back(buildHeader(&header));
                 for (int i = 0; i < 7; i++) {
                     frames->push_back(data->front());
                     data->pop_front();
                 }
 
                 // update sequence number for next iteration
-                sequenceNumber = getNextSeqNumber(sequenceNumber);
+                sequenceNumber = nextSeqNumber(sequenceNumber);
             }
         }
     }
@@ -100,7 +91,7 @@ std::deque<uint8_t>* D2_Protocol::messageToFrames(std::deque<uint8_t> *data) {
     return frames;
 }
 
-std::deque<uint8_t>* D2_Protocol::unpackMessage(std::deque<uint8_t> *data) {
+std::deque<uint8_t>* D2_Message::fromFrames(std::deque<uint8_t> *data) {
     // make sure the size of our input array is valid
     assert((data->size() % 8) == 0);
 
@@ -118,12 +109,12 @@ std::deque<uint8_t>* D2_Protocol::unpackMessage(std::deque<uint8_t> *data) {
     for (uint32_t frame = 0; frame < numFrames; frame++) {
         header = FrameHeader();
 
-        header = parseFrameHeader(&data->front());
+        header = parseHeader(&data->front());
         data->pop_front();
 
         // if not first or last frame, check sequence number
         if (!((frame == 0) || (frame == (numFrames - 1)))) {
-            uint8_t expectedSequenceNumber = getNextSeqNumber(lastSequenceNumber);
+            uint8_t expectedSequenceNumber = nextSeqNumber(lastSequenceNumber);
             assert(header.sequenceNumber == expectedSequenceNumber);
             lastSequenceNumber = header.sequenceNumber;
         }
@@ -144,7 +135,7 @@ std::deque<uint8_t>* D2_Protocol::unpackMessage(std::deque<uint8_t> *data) {
     return message;
 }
 
-D2_Protocol::FrameHeader D2_Protocol::parseFrameHeader(uint8_t *firstByte) {
+D2_Message::FrameHeader D2_Message::parseHeader(uint8_t *firstByte) {
     // single frame: mask 0xF8, filter 0xC8, last3 num sig bytes
     // multi first: mask 0xFF, filter 0x8F, last3 always 0b111
     // multi middle: mask 0xF8, filter 0x08, last3 seq number
@@ -153,7 +144,7 @@ D2_Protocol::FrameHeader D2_Protocol::parseFrameHeader(uint8_t *firstByte) {
     // this pointer should be valid
     assert(firstByte != nullptr);
 
-    D2_Protocol::FrameHeader header;
+    D2_Message::FrameHeader header;
 
     if ((*firstByte & 0xF8) == 0xC8) { // Single-frame message
         header.type = FrameHeader::Type::SINGLE;
@@ -174,7 +165,7 @@ D2_Protocol::FrameHeader D2_Protocol::parseFrameHeader(uint8_t *firstByte) {
     return header;
 }
 
-uint8_t D2_Protocol::buildFrameHeader(D2_Protocol::FrameHeader *header) {
+uint8_t D2_Message::buildHeader(D2_Message::FrameHeader *header) {
     // single frame: 0xC8 + num sig bytes (up to 7)
     // multi first: 0x8F
     // multi middle: 0x08 + sequence number (up to 7, rolls over to 0)
@@ -223,7 +214,7 @@ uint8_t D2_Protocol::buildFrameHeader(D2_Protocol::FrameHeader *header) {
     return headerByte;
 }
 
-uint8_t D2_Protocol::getNextSeqNumber(uint8_t currentNumber) {
+uint8_t D2_Message::nextSeqNumber(uint8_t currentNumber) {
     if (currentNumber == 0b111) {
         return 0;
     } else {

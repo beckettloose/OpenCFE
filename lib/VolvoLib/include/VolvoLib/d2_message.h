@@ -1,13 +1,14 @@
-#ifndef __D2_PROTOCOL_H
-#define __D2_PROTOCOL_H
+#ifndef __D2_MESSAGE_H
+#define __D2_MESSAGE_H
 
 #include <cstdint>
 #include <deque>
 
 namespace Volvo {
 
-/* Manages the D2 session and provides utility functions for processing messages */
-class D2_Protocol {
+/* Implements functions regarding D2 message processing (does not handle flow or
+ * session management. */
+class D2_Message {
 public:
     /* Represents the data contained in the header of a D2 CAN frame */
     typedef struct FrameHeader {
@@ -18,30 +19,30 @@ public:
     } FrameHeader;
 
     /* Start a D2 session and begin sending the keepalive signal */
-    void startSession();
+    // void startSession();
 
     /* End the D2 session and cancel the keepalive signal */
-    void endSession();
+    // void endSession();
 
     /* Calculate the expected number of CAN frames for a D2 message */
-    static uint32_t getNumFrames(uint32_t numBytes);
+    static uint32_t numFrames(uint32_t numBytes);
 
     /* Convert the message at *data to can frames and store it at *dest. Returns the total number of frames generated*/
-    static std::deque<uint8_t>* messageToFrames(std::deque<uint8_t> *data);
+    static std::deque<uint8_t>* toFrames(std::deque<uint8_t> *data);
 
     /* Try to unpack the D2 message. */
-    static std::deque<uint8_t>* unpackMessage(std::deque<uint8_t> *data);
+    static std::deque<uint8_t>* fromFrames(std::deque<uint8_t> *data);
 
     /* Parse the header frame of a D2 message. Takes a pointer to the first byte of the frame */
-    static FrameHeader parseFrameHeader(uint8_t *firstByte);
+    static FrameHeader parseHeader(uint8_t *firstByte);
 
     /* Build the header frame of a D2 message. Takes a pointer to the FrameHeader struct to use */
-    static uint8_t buildFrameHeader(FrameHeader *header);
+    static uint8_t buildHeader(FrameHeader *header);
 
     /* Calculate the next sequence number based on the current one. */
-    static uint8_t getNextSeqNumber(uint8_t currentNumber);
+    static uint8_t nextSeqNumber(uint8_t currentNumber);
 private:
-    D2_Protocol();
+    D2_Message();
 };
 
 }
