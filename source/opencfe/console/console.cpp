@@ -1,10 +1,9 @@
 #include "console.h"
+#include "../power_state_manager.h"
 #include "BufferedSerial.h"
 #include "Callback.h"
 #include "PinNameAliases.h"
 #include "Thread.h"
-#include "mbed_retarget.h"
-// #include "stm32f767xx.h"
 #include <cstring>
 #include <sstream>
 
@@ -24,10 +23,6 @@ void resetCommand(const std::string &args) {
 }
 
 void Console::_threadTask() {
-    // char buf[32] = "\r\n";
-    // _rawSerial->write(buf, 32);
-    // char buf2[32] = "OpenCFE>";
-    // _rawSerial->write(buf2, 32);
     _rawSerial->write("\r\n", 2);
     printPrompt();
 
@@ -40,13 +35,38 @@ void Console::_threadTask() {
                          _rawSerial->write("\r\n", 2);
                          });
 
+    con->registerCommand("caffeinate", "Prevent the system from sleeping",
+                         [this](const std::string &args) {
+                            const char *msg = "Caffeinating...\r\n";
+                            write(msg);
+                            PowerStateManager::getInstance()->caffeinate();
+                         });
+
+    con->registerCommand("decaffeinate", "Allow the system to sleep",
+                         [this](const std::string &args){
+                            const char *msg = "Decaffeinating...\r\n";
+                            write(msg);
+                            PowerStateManager::getInstance()->decaffeinate();
+                         });
+
     std::string cmd;
     while (true) {
+        _flags->wait_all(CFE_CON_FLAG_RUN, osWaitForever, false);
         con->processInput(cmd);
     }
 }
 
-void Console::start() { _thread->start(callback(this, &Console::_threadTask)); }
+void Console::init() {
+    _thread->start(callback(this, &Console::_threadTask));
+}
+
+void Console::start() {
+    _flags->set(CFE_CON_FLAG_RUN);
+}
+
+void Console::stop() {
+    _flags->clear(CFE_CON_FLAG_RUN);
+}
 
 bool Console::processInput(std::string &outCommand) {
     if (!_rawSerial->readable()) {
@@ -116,7 +136,7 @@ void Console::handleCommand(const std::string &line) {
     }
 
     const char *msg = "Unknown command. Type 'help' for list.\r\n";
-    _rawSerial->write(msg, std::strlen(msg));
+    write(msg);
 }
 
 void Console::commandHelp(const std::string &) {
@@ -124,6 +144,14 @@ void Console::commandHelp(const std::string &) {
     _rawSerial->write(header, std::strlen(header));
     for (auto &c : commands) {
         std::string line = "  " + c.name + " - " + c.help + "\r\n";
-        _rawSerial->write(line.c_str(), line.size());
+        write(line.c_str(), line.size());
     }
+}
+
+void Console::write(const void *buf, size_t len) {
+    _rawSerial->write(buf, len);
+}
+
+void Console::write(const char *msg) {
+    write(msg, std::strlen(msg));
 }

@@ -3,6 +3,7 @@
 #include "DigitalOut.h"
 #include "InterruptIn.h"
 #include "PinNames.h"
+#include "PortNames.h"
 
 PowerStateManager::PowerStateManager() {
     flags = new EventFlags;
@@ -24,8 +25,8 @@ PowerStateManager::PowerStateManager() {
 void PowerStateManager::start() {
     _subsystem->init();
 
-    // Start the subsystem thread (it will block instantly, though)
     _subsystemThread->start(callback(this, &PowerStateManager::_subsystemTask));
+    _console->init();
 
     while (true) {
         // block until the enable flag is set
@@ -59,7 +60,21 @@ void PowerStateManager::requestFullSystemStartup() {
 }
 
 void PowerStateManager::requestFullSystemShutdown() {
-    flags->set(CFE_PSM_FLAG_SUB_SHUTDOWN);
+    if (!_caffeinated) {
+        flags->set(CFE_PSM_FLAG_SUB_SHUTDOWN);
+    }
+}
+
+void PowerStateManager::caffeinate() {
+    _caffeinated = true;
+}
+
+void PowerStateManager::decaffeinate() {
+    _caffeinated = false;
+}
+
+bool PowerStateManager::isCaffeinated() {
+    return _caffeinated;
 }
 
 void PowerStateManager::canWakeupISR() {
@@ -79,8 +94,11 @@ void PowerStateManager::_subsystemTask() {
 
         flags->clear(CFE_PSM_FLAG_MAIN_SUB_CLEAN);
 
+        _console->start();
+
         if (flags->get() & CFE_PSM_FLAG_SUB_SHUTDOWN) {
             _subsystem->stop();
+            _console->stop();
 
             if (_subsystem->getState() == Subsystem::State::STOPPED) {
                 shouldSetCleanFlag = true;

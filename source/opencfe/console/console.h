@@ -1,10 +1,13 @@
 #ifndef __CONSOLE_H
 #define __CONSOLE_H
 
+#include "EventFlags.h"
 #include <mbed.h>
 #include <string>
 #include <functional>
 #include <vector>
+
+#define CFE_CON_FLAG_RUN (1UL << 1) // Allows the console thread to run
 
 /**
 * A basic serial console written with the help of ChatGPT for now.
@@ -23,7 +26,13 @@ public:
 
     void registerCommand(const std::string &name, const std::string &help, CommandHandler handler);
 
+    void init();
     void start();
+    void stop();
+
+    void write(const void *buf, size_t len);
+    void write(const char *msg);
+
 protected:
     void _threadTask();
     BufferedSerial* _rawSerial;
@@ -32,6 +41,7 @@ private:
 
     Thread* _thread;
 
+    EventFlags* _flags;
 
     struct Command {
         std::string name;

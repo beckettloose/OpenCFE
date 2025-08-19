@@ -4,6 +4,7 @@
 #include <mbed.h>
 #include "DigitalOut.h"
 #include "subsystem.h"
+#include "console/console.h"
 
 #define CFE_PSM_FLAG_MAIN_WAKEUP (1UL << 1) // Allows the main thread loop to run.
 #define CFE_PSM_FLAG_MAIN_SHUTDOWN (1UL << 2) // Signals the main thread to begin shutting down.
@@ -42,6 +43,15 @@ public:
     // Tell the main thread to try shutting down.
     void requestFullSystemShutdown();
 
+    // Prevent the power state manager from going to sleep.
+    void caffeinate();
+
+    // Allow the power state manager to go to sleep.
+    void decaffeinate();
+
+    // Check if sleeping is blocked.
+    bool isCaffeinated();
+
     // The Interrupt Service Routine that responds to the CAN wakeup interrupt.
     void canWakeupISR();
 protected:
@@ -60,6 +70,10 @@ private:
     EventQueue* _systemEventQueue;
 
     DigitalOut* _psmLED;
+
+    Console* _console;
+
+    bool _caffeinated;
 };
 
 #endif
