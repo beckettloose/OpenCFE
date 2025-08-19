@@ -62,5 +62,5 @@ void Ignition::periodic() {
 }
 
 void Ignition::keyOutSleep() {
-    PowerStateManager::getInstance()->requestFullSystemShutdown();
+    PowerStateManager::getInstance()->requestShutdown();
 }

@@ -3,7 +3,6 @@
 #include "DigitalOut.h"
 #include "InterruptIn.h"
 #include "PinNames.h"
-#include "PortNames.h"
 
 PowerStateManager::PowerStateManager() {
     flags = new EventFlags;
@@ -29,37 +28,19 @@ void PowerStateManager::start() {
     _console->init();
 
     while (true) {
-        // block until the enable flag is set
         flags->wait_all(CFE_PSM_FLAG_MAIN_WAKEUP, osWaitForever, false);
-        _psmLED->write(1);
-        requestSubsystemStartup();
-
-        // TODO: determine if we should start the subsystem thread automatically
-    }
-}
-
-void PowerStateManager::requestSubsystemShutdown() {
-    // Set the subsystem shutdown flag
-    flags->set(CFE_PSM_FLAG_SUB_SHUTDOWN);
-}
-
-void PowerStateManager::requestSubsystemStartup() {
-    // If the main thread is enabled
-    if (flags->get() & CFE_PSM_FLAG_MAIN_WAKEUP) {
-        // set the subsystem enable flag
         flags->set(CFE_PSM_FLAG_SUB_ENABLE);
-
-        // clear the main thread wakeup flag
         flags->clear(CFE_PSM_FLAG_MAIN_WAKEUP);
+        _psmLED->write(1);
     }
 }
 
-void PowerStateManager::requestFullSystemStartup() {
+void PowerStateManager::requestWakeup() {
     // set the main wakeup flag
     flags->set(CFE_PSM_FLAG_MAIN_WAKEUP);
 }
 
-void PowerStateManager::requestFullSystemShutdown() {
+void PowerStateManager::requestShutdown() {
     if (!_caffeinated) {
         flags->set(CFE_PSM_FLAG_SUB_SHUTDOWN);
     }

@@ -28,20 +28,14 @@ public:
     // Start the power management system. This function does not return.
     void start();
 
+    // Tell the main thread to start running.
+    void requestWakeup();
+
     // Tell the subsystem thread to begin shutting down.
     // Note that this does not happen instantly, so the caller must assume
     // that the system may continue to run for a period of time after this
     // is called.
-    void requestSubsystemShutdown();
-
-    // Tell the subsystem thread to start up.
-    void requestSubsystemStartup();
-
-    // Tell the main thread to start running.
-    void requestFullSystemStartup();
-
-    // Tell the main thread to try shutting down.
-    void requestFullSystemShutdown();
+    void requestShutdown();
 
     // Prevent the power state manager from going to sleep.
     void caffeinate();
