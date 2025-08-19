@@ -46,6 +46,8 @@ private:
     void keyOutSleep();
     bool sleepEventPosted = false;
     bool sleepEventCanceled = false;
+    bool _cafState = false;
+    bool _lastCafState = false;
 };
 
 #endif

@@ -2,10 +2,9 @@
 #define __CONSOLE_H
 
 #include "EventFlags.h"
+#include "command_registry.h"
 #include <mbed.h>
 #include <string>
-#include <functional>
-#include <vector>
 
 #define CFE_CON_FLAG_RUN (1UL << 1) // Allows the console thread to run
 
@@ -20,11 +19,9 @@ public:
         return &instance;
     }
 
-    using CommandHandler = std::function<void(const std::string &args)>;
-
     bool processInput(std::string &outCommand);
 
-    void registerCommand(const std::string &name, const std::string &help, CommandHandler handler);
+    void registerCommand(const std::string &name, const std::string &help, CommandRegistry::CommandHandler handler);
 
     void init();
     void start();
@@ -43,21 +40,18 @@ private:
 
     EventFlags* _flags;
 
-    struct Command {
-        std::string name;
-        std::string help;
-        CommandHandler handler;
-    };
+    bool _hasStarted;
 
     static constexpr size_t MAX_BUFFER = 128;
     char buffer[MAX_BUFFER];
     size_t index;
 
-    std::vector<Command> commands;
+    CommandRegistry registry;
 
     void printPrompt();
     void echoChar(char c);
     void handleCommand(const std::string &line);
+    void handleTabCompletion();
 
     void commandHelp(const std::string &args);
 };

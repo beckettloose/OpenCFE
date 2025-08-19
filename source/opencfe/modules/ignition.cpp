@@ -46,6 +46,12 @@ void Ignition::stop() {
 }
 
 void Ignition::periodic() {
+    _cafState = PowerStateManager::getInstance()->isCaffeinated();
+
+    if (_cafState != _lastCafState) {
+        sleepEventPosted = false;
+    }
+
     if (getKeyPos() != KeyOut) {
         if (!sleepEventCanceled) {
             keyOutSleepEvent->cancel();
@@ -53,12 +59,13 @@ void Ignition::periodic() {
             sleepEventPosted = false;
         }
     } else {
-        if (!sleepEventPosted) {
+        if (!sleepEventPosted && !PowerStateManager::getInstance()->isCaffeinated()) {
             keyOutSleepEvent->post();
             sleepEventCanceled = false;
             sleepEventPosted = true;
         }
     }
+    _lastCafState = _cafState;
 }
 
 void Ignition::keyOutSleep() {

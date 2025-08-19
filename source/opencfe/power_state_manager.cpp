@@ -19,6 +19,10 @@ PowerStateManager::PowerStateManager() {
     _subsystem = Subsystem::getInstance();
 
     _psmLED = new DigitalOut(PB_0);
+
+    _console = Console::getInstance();
+
+    _caffeinated = false;
 }
 
 void PowerStateManager::start() {
@@ -75,8 +79,6 @@ void PowerStateManager::_subsystemTask() {
 
         flags->clear(CFE_PSM_FLAG_MAIN_SUB_CLEAN);
 
-        _console->start();
-
         if (flags->get() & CFE_PSM_FLAG_SUB_SHUTDOWN) {
             _subsystem->stop();
             _console->stop();
@@ -86,6 +88,7 @@ void PowerStateManager::_subsystemTask() {
             }
         } else {
             _subsystem->start();
+            _console->start();
         }
 
         _systemEventQueue->dispatch_for(1000ms);
