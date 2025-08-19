@@ -1,13 +1,13 @@
 #include "lcd.h"
 #include "EventQueue.h"
 #include "canbus.h"
-#include "../subsystem.h"
 #include "mbed_shared_queues.h"
 
 namespace Volvo {
 
 LCD::LCD() {
     EventQueue *queue = mbed_event_queue();
+    mutex = new Mutex();
     periodicEvent = new Event<void()>(queue, callback(this, &Volvo::LCD::periodic));
     periodicEvent->period(50ms);
 }

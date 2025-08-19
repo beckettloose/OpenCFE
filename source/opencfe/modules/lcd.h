@@ -25,6 +25,8 @@ public:
     void print(const char text[], int len);
     void periodic();
 
+    Mutex* mutex;
+
     void start();
     void stop();
 private:
