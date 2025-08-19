@@ -7,8 +7,7 @@
             "events.shared-dispatch-from-application": true,
             "events.shared-eventsize": 2048,
             "platform.stdio-baud-rate": 115200,
-            "target.c_lib": "small",
-            "target.printf_lib": "minimal-printf",
+            "target.c_lib": "std",
             "platform.minimal-printf-enable-floating-point": false,
             "platform.stdio-minimal-console-only": true
         }
