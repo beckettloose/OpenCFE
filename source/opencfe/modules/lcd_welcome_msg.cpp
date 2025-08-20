@@ -56,7 +56,11 @@ void LCDWelcomeMessage::periodic() {
 }
 
 void LCDWelcomeMessage::showWelcome() {
-    if (!lcd->mutex->trylock()) return;
+    if (!lcd->mutex->trylock()) {
+        // TODO: print error message
+        return;
+    }
+    _hasMutex = true;
     showGoodbyeEvent->cancel();
     hideMessageEvent->cancel();
     lcd->enable();
@@ -64,11 +68,14 @@ void LCDWelcomeMessage::showWelcome() {
     const char *text = "Welcome!";
     lcd->print(text, strlen(text));
     hideMessageEvent->post();
-    lcd->mutex->unlock();
 }
 
 void LCDWelcomeMessage::showGoodbye() {
-    if (!lcd->mutex->trylock()) return;
+    if (!lcd->mutex->trylock()) {
+        // TODO: print error message
+        return;
+    }
+    _hasMutex = true;
     showWelcomeEvent->cancel();
     hideMessageEvent->cancel();
     lcd->enable();
@@ -76,12 +83,15 @@ void LCDWelcomeMessage::showGoodbye() {
     const char *text = "Goodbye!";
     lcd->print(text, strlen(text));
     hideMessageEvent->post();
-    lcd->mutex->unlock();
 }
 
 void LCDWelcomeMessage::hideMessage() {
-    if (!lcd->mutex->trylock()) return;
+    if (!_hasMutex) {
+        // TODO: print error message
+        return;
+    }
     lcd->clear();
     lcd->disable();
     lcd->mutex->unlock();
+    _hasMutex = false;
 }

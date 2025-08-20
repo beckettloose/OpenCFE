@@ -26,6 +26,8 @@ private:
     Ignition* ignition;
     Ignition::KeyPos lastKeyPos;
 
+    bool _hasMutex;
+
     EventQueue* queue;
 
     Event<void()>* periodicEvent;
