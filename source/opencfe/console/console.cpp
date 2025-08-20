@@ -180,7 +180,7 @@ void Console::handleTabCompletion() {
         return;
     }
 
-    if (cmd->completer) {
+    if (cmd->completer && first == cmd->name) {
         auto matches = cmd->completer->complete(rest);
         applyCompletion(matches, rest);
         return;
@@ -197,6 +197,9 @@ void Console::applyCompletion(const std::vector<std::string>& matches, const std
         size_t pos = inputBuffer.rfind(prefix);
         if (pos != std::string::npos) {
             inputBuffer.replace(pos, prefix.size(), matches[0]);
+            if (inputBuffer.back() != ' ') {
+                inputBuffer.append(" ");
+            }
             const char *seq = "\r\033[K"; // clear line
             write(seq, std::strlen(seq));
             printPrompt();
