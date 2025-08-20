@@ -28,10 +28,10 @@ Feature availability depends on platform, model year, and options, but some exam
     - [ ] Synchronus logging that prevents log messages from clobbering your prompt
 - [ ] Establish CAN communications with vehicle and test simple functions
 - [ ] Finish and test CAN based wakeup and shutdown controls (Wakes up when pin is pulled low by test lead, haven't tried with CAN transciever yet, Want to enable sleep debugging to see if we are actually sleeping)
-    - [x] Works when shrting wire to ground
-    - [ ] Works when connected to an actual CAN transciever
-- [ ] Design abstraction for different model years of vehicle (for CAN IDs and baudrates) (Need to determine if this will be implemented with conditional compilation or automatic detection at runtime)
-- [ ] Figure out how to handle arbitration of multi-parameter D2 IO controls between different modules. (Turn Signals, Headlights, and Wipers all share one message) (Maybe use a mutex for locking, then track ownership of the mutex to determine if the mask bit should be set? We will definitely want to avoid unnessecary releases of this lock as it requires the whole message to be refreshed.)
+    - [x] Works when shorting wire to ground
+    - [ ] Works when connected to an actual CAN transceiver
+- [ ] Design abstraction for different model years of vehicle (for CAN IDs and baud rates) (Need to determine if this will be implemented with conditional compilation or automatic detection at runtime)
+- [ ] Figure out how to handle arbitration of multi-parameter D2 IO controls between different modules. (Turn Signals, Headlights, and Wipers all share one message) (Maybe use a mutex for locking, then track ownership of the mutex to determine if the mask bit should be set? We will definitely want to avoid unnecessary releases of this lock as it requires the whole message to be refreshed.)
 - [ ] Create full list of planned subsystems and which ones are supported per vehicle
 - [ ] Find way to deal with K-Line keepalive on 99-04 vehicles (or bypass relay)
 - [ ] Determine processor specs required for production hardware revision

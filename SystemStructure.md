@@ -1,0 +1,32 @@
+# OpenCFE System Structure
+
+- Power State Manager
+    - Console
+        - Command
+    - Subsystem
+        - Module
+- D2 HAL
+    - Session Management and Keepalive
+    - Standard Parameters
+        - ECU ID
+        - Respone CAN ID
+    - Platform (P1, P2, P3)
+        - ECU (CEM, ECM, CCM, DIM)
+            - Standard Data
+            - Function Group (CEM 1A01)
+                - Function Item (Low Beam Relay, Tachometer)
+                    - Templated Type? (int, bool, double)
+                    - Get/Set Functions
+                    - Function to encode the data
+- CAN Decode HAL (Runs as module)
+    - Parameter Group (Steering Wheel Controls, Daylight Sensor)
+        - Parameter (Daylight Value, Key Position)
+- D2 Protocol Library
+    - D2 <-> CAN Frame Encode/Decode
+    - D2 Message Builder
+        - Create base buffers for certain message types
+            - Hanlde total data size properly
+        - Apply data to
+    - D2 Response Decoder
+        - Determine response status
+        - Check error type
