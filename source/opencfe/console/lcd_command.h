@@ -8,6 +8,9 @@
 #include <vector>
 #include "../modules/lcd.h"
 
+/**
+* Command group for controlling the DIM LCD.
+*/
 class LCDCommand : public CompletableCommand {
 public:
     LCDCommand();
@@ -25,11 +28,34 @@ private:
 
     CommandRegistry registry;
 
+    /**
+    * Attempt to acquire the LCD mutex lock for up to 5 seconds.
+    */
     void lcdLock(const std::string &args);
+
+    /**
+    * Release the LCD mutex lock.
+    */
     void lcdUnlock(const std::string &args);
+
+    /**
+    * Enable the LCD.
+    */
     void lcdEnable(const std::string &args);
+
+    /**
+    * Disable the LCD.
+    */
     void lcdDisable(const std::string &args);
+
+    /**
+    * Write arbitrary text to the LCD.
+    */
     void lcdWrite(const std::string &args);
+
+    /**
+    * Clear all text from the LCD.
+    */
     void lcdClear(const std::string &args);
 };
 

@@ -4,6 +4,10 @@
 #include <string>
 #include <vector>
 
+/**
+* Defines a command that has subcommand completion capabilities. This is
+* required in order to expose the completion interface to the parent command.
+*/
 class CompletableCommand {
 public:
     virtual ~CompletableCommand() = default;

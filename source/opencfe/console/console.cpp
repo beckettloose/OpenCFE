@@ -26,18 +26,17 @@ Console::Console() : index(0) {
     _thread = new Thread;
 }
 
-void resetCommand(const std::string &args) {
-    NVIC_SystemReset();
-}
-
 void Console::_threadTask() {
     write("\r\nWelcome to the OpenCFE Serial Console!\r\n");
 
-    registerCommand("reset", "Reset the device", resetCommand);
+    registerCommand("reset", "Reset the device",
+                    [](const std::string &args) {
+                        NVIC_SystemReset();
+                    });
     registerCommand("echo", "Echo the provided text",
                          [this](const std::string &args) {
-                         _rawSerial->write(args.c_str(), args.size());
-                         _rawSerial->write("\r\n", 2);
+                         write(args.c_str(), args.size());
+                         write("\r\n", 2);
                          });
 
     registerCommand("caffeinate", "Prevent the system from sleeping",
@@ -57,24 +56,31 @@ void Console::_threadTask() {
     registerCommand("lcd", "Control the DIM LCD", [&](const std::string &args){ lcdCommand(args); }, &lcdCommand);
 
     while (true) {
+        // EventFlags.wait() allows us to enter low power sleep
         _flags->wait_all(CFE_CON_FLAG_RUN, osWaitForever, false);
+
         char c;
         while (_rawSerial->readable()) {
+            // Ensure we read exactly 1 byte
             if (_rawSerial->read(&c, 1) != 1) continue;
 
             if (c == '\r' || c == '\n') {
-                _rawSerial->write("\r\n", 2);
-                processInput();
+                // Handle enter/return keys
+                write("\r\n", 2);
+                processCommand();
                 inputBuffer.clear();
                 printPrompt();
             } else if ((c == '\b' || c == 0x7F)) {
+                // Handle backspace key
                 if (!inputBuffer.empty()) {
                     inputBuffer.pop_back();
-                    _rawSerial->write("\b \b", 3);
+                    write("\b \b", 3);
                 }
             } else if (c == '\t') {
+                // Handle tab key
                 handleTabCompletion();
             } else if (isprint(static_cast<unsigned char>(c))) {
+                // Handle regular characters
                 inputBuffer.push_back(c);
                 write(&c, 1);
             }
@@ -104,8 +110,8 @@ void Console::stop() {
     }
 }
 
-void Console::processInput() {
-// Trim whitespace
+void Console::processCommand() {
+    // Trim white space from start and end of input buffer
     auto first = inputBuffer.find_first_not_of(" \t\r\n");
     if (first == std::string::npos) return;
     auto last = inputBuffer.find_last_not_of(" \t\r\n");
@@ -137,7 +143,6 @@ void Console::processInput() {
             }
             return;
         }
-
         found->handler(args);
     } else {
         const char *msg = "Unknown or ambiguous command. Type 'help' or '?'\r\n";
@@ -147,53 +152,18 @@ void Console::processInput() {
 
 void Console::printPrompt() {
     const char *prompt = "OpenCFE>";
-    _rawSerial->write(prompt, std::strlen(prompt));
+    write(prompt, std::strlen(prompt));
 }
 
-void Console::echoChar(char c) { _rawSerial->write(&c, 1); }
+void Console::echoChar(char c) { write(&c, 1); }
 
 void Console::registerCommand(const std::string &name, const std::string &help, std::function<void(const std::string& args)> handler, CompletableCommand* completer) {
     registry.registerCommand(name, help, handler, completer);
 }
 
-void Console::handleCommand(const std::string &line) {
-    if (line.empty())
-        return;
-
-    std::istringstream iss(line);
-    std::string cmd;
-    std::getline(iss, cmd, ' ');
-
-    std::string args;
-    std::getline(iss, args);
-    if (!args.empty() && args[0] == ' ') args.erase(0, 1);
-
-    if (cmd == "?") {
-        registry.printHelp();
-        return;
-    }
-
-    auto found = registry.findCommand(cmd);
-    if (!found) {
-        const char *msg = "Unknown command. Type 'help' or '?' for list.\r\n";
-        write(msg);
-        return;
-    }
-
-    if (args == "?") {
-        std::string line = "Subcommands for " + found->name + ":\r\n";
-        write(line.c_str(), line.size());
-
-        found->handler("?");
-        return;
-    }
-
-    found->handler(args);
-}
-
 void Console::commandHelp(const std::string &) {
     const char *header = "Available commands:\r\n";
-    _rawSerial->write(header, std::strlen(header));
+    write(header, std::strlen(header));
     for (auto &c : registry.list()) {
         std::string line = "  " + c.name + " - " + c.help + "\r\n";
         write(line.c_str(), line.size());
@@ -231,6 +201,7 @@ void Console::handleTabCompletion() {
 void Console::applyCompletion(const std::vector<std::string>& matches, const std::string& prefix) {
     if (matches.empty()) return;
 
+    // BUG: Something in this logic needs to be fixed, applying completions is broken
     if (matches.size() == 1) {
         // replace suffix of buffer with match
         size_t pos = inputBuffer.rfind(prefix);

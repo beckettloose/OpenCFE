@@ -1,8 +1,4 @@
 #include "power_state_manager.h"
-#include "Callback.h"
-#include "DigitalOut.h"
-#include "InterruptIn.h"
-#include "PinNames.h"
 
 PowerStateManager::PowerStateManager() {
     flags = new EventFlags;
@@ -15,7 +11,6 @@ PowerStateManager::PowerStateManager() {
 
     _subsystemThread = new Thread;
     _systemEventQueue = mbed_event_queue();
-
     _subsystem = Subsystem::getInstance();
 
     _psmLED = new DigitalOut(PB_0);
@@ -27,7 +22,6 @@ PowerStateManager::PowerStateManager() {
 
 void PowerStateManager::start() {
     _subsystem->init();
-
     _subsystemThread->start(callback(this, &PowerStateManager::_subsystemTask));
     _console->init();
 
@@ -40,7 +34,6 @@ void PowerStateManager::start() {
 }
 
 void PowerStateManager::requestWakeup() {
-    // set the main wakeup flag
     flags->set(CFE_PSM_FLAG_MAIN_WAKEUP);
 }
 
@@ -63,12 +56,8 @@ bool PowerStateManager::isCaffeinated() {
 }
 
 void PowerStateManager::canWakeupISR() {
-    // Immediately disable the CAN wakeup IRQ since we would otherwise get
-    // around 125,000 interrupts/sec.
     _canWakeupInterrupt->disable_irq();
-
-    // Set the main wakeup flag to enable everything
-    flags->set(CFE_PSM_FLAG_MAIN_WAKEUP);
+    requestWakeup();
 }
 
 void PowerStateManager::_subsystemTask() {

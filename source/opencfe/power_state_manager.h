@@ -2,7 +2,6 @@
 #define __POWER_STATE_MANAGER_H
 
 #include <mbed.h>
-#include "DigitalOut.h"
 #include "subsystem.h"
 #include "console/console.h"
 
@@ -12,7 +11,11 @@
 #define CFE_PSM_FLAG_MAIN_SUB_CLEAN (1UL << 4) // Signals the main thread that the subsystem has shut down.
 #define CFE_PSM_FLAG_SUB_SHUTDOWN (1UL << 5) // Signals the subsystem thread to begin shutting down.
 
-// Controls the system power state
+/**
+* Controls the system power state. Allows OpenCFE to enter low power sleep mode
+* when car turns off, preventing battery drain. Uses hardware interrupts to wake
+* up automatically.
+*/
 class PowerStateManager {
 public:
     static PowerStateManager* getInstance() {
@@ -20,53 +23,84 @@ public:
         return &instance;
     }
 
-    // Signal between manager and subsystem to make sure we finish up before
-    // entering deep sleep. Also lets us block the main thread until our wakeup
-    // ISR is triggered.
+    /**
+    * Signals between the PSM, Subsystem, and Hardware to control the wake-up
+    * and shutdown process.
+    */
     EventFlags* flags;
 
     // Start the power management system. This function does not return.
     void start();
 
-    // Tell the main thread to start running.
+    // Tell the power state manager to begin the wake-up process.
     void requestWakeup();
 
-    // Tell the subsystem thread to begin shutting down.
-    // Note that this does not happen instantly, so the caller must assume
-    // that the system may continue to run for a period of time after this
-    // is called.
+    /**
+    * Tell the subsystem thread to begin shutting down.
+    * Note that this function returns immediately while the system may take a
+    * few seconds to complete the shutdown process.
+    */
     void requestShutdown();
 
-    // Prevent the power state manager from going to sleep.
+    // Prevent the power state manager from shutting down.
     void caffeinate();
 
-    // Allow the power state manager to go to sleep.
+    // Allow the power state manager to shut down.
     void decaffeinate();
 
-    // Check if sleeping is blocked.
+    // Check if shutting down is prevented.
     bool isCaffeinated();
 
-    // The Interrupt Service Routine that responds to the CAN wakeup interrupt.
+    /**
+    * The Interrupt Service Routine (ISR) that responds to the CAN wakeup
+    * interrupt.
+    */
     void canWakeupISR();
 protected:
+    /**
+    * The function executed by the subsystem thread.
+    */
     void _subsystemTask();
 private:
     PowerStateManager();
 
-    // Allows us to use the CAN RX pin to wake up from deep sleep
+    /**
+    * Hardware interrupt in the CAN_LS RX pin so that we are woken up by CAN bus
+    * activity.
+    */
     InterruptIn* _canWakeupInterrupt;
 
-    // Gives us direct control over the subsystem thread
+    /**
+    * Thread that manages the subsystem lifecycle and executes events posted by
+    * subsystem modules.
+    */
     Thread* _subsystemThread;
 
+    /**
+    * OpenCFE's Module Manager. Instantiates the modules and calls their
+    * start/stop functions.
+    */
     Subsystem* _subsystem;
 
+    /**
+    * The OpenCFE master event queue. All events should be posted here. By
+    * default, this is set to mbed_event_queue().
+    */
     EventQueue* _systemEventQueue;
 
+    /**
+    * Status LED to indicate when the PSM is enabled.
+    */
     DigitalOut* _psmLED;
 
+    /**
+    * Simple UART CLI for testing and debug.
+    */
     Console* _console;
 
+    /**
+    * True when the PSM is prevented from shutting down.
+    */
     bool _caffeinated;
 };
 
