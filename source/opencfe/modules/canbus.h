@@ -1,14 +1,8 @@
 #ifndef __CANBUS_H
 #define __CANBUS_H
 
-#include "DigitalOut.h"
-#include "EventFlags.h"
-#include "../subsystem.h"
-#include <cstdint>
-
 #include <mbed.h>
-#include <PinNames.h>
-#include <vector>
+#include "../subsystem.h"
 
 #define CAN_RX_QUEUE_SIZE 50
 #define CAN_RX_QUEUE_MESSAGES_PER_PERIOD 25

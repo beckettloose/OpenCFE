@@ -1,10 +1,6 @@
 #include "lcd_command.h"
-#include "command_registry.h"
-#include "console.h"
 #include <sstream>
 #include <cstring>
-#include <string>
-#include <vector>
 
 LCDCommand::LCDCommand() {
     con = Console::getInstance();

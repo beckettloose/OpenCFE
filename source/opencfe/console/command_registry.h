@@ -2,8 +2,6 @@
 #define __COMMAND_REISTRY_H
 
 #include "completable_command.h"
-#include <string>
-#include <vector>
 #include <functional>
 
 /**

@@ -1,11 +1,5 @@
 #include "subsystem.h"
-#include "modules/canbus.h"
-#include "modules/ignition.h"
-#include "modules/lcd.h"
 #include "modules/lcd_welcome_msg.h"
-#include "mbed_shared_queues.h"
-#include <algorithm>
-#include <vector>
 
 Subsystem::Subsystem() {
     systemQueue = mbed_event_queue();

@@ -1,11 +1,4 @@
 #include "canbus.h"
-#include "DigitalOut.h"
-#include "InterfaceCAN.h"
-#include "can_helper.h"
-
-#include <cassert>
-#include <cstring>
-#include <mbed.h>
 
 CANbus::CANbus() {
     rx_listeners = std::vector<CANbus::Listener *>();

@@ -4,9 +4,9 @@
 #include "command_registry.h"
 #include "completable_command.h"
 #include "console.h"
+#include "../modules/lcd.h"
 #include <string>
 #include <vector>
-#include "../modules/lcd.h"
 
 /**
 * Command group for controlling the DIM LCD.

@@ -1,9 +1,8 @@
 #ifndef __CONSOLE_H
 #define __CONSOLE_H
 
-#include "EventFlags.h"
-#include "command_registry.h"
 #include <mbed.h>
+#include "command_registry.h"
 #include <string>
 #include <vector>
 
@@ -27,7 +26,7 @@ public:
 
     /**
     * Inform the command registry about a new command. This sets it up to handle
-    * tab completion and basic help funcionality, as well as allowing the
+    * tab completion and basic help functionality, as well as allowing the
     * command to provide its own subcommand completion.
     */
     void registerCommand(const std::string &name, const std::string &help, std::function<void(const std::string& args)> handler, CompletableCommand* completer = nullptr);

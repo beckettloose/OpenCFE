@@ -1,15 +1,7 @@
 #include "console.h"
 #include "../power_state_manager.h"
-#include "BufferedSerial.h"
-#include "Callback.h"
-#include "EventFlags.h"
-#include "PinNameAliases.h"
-#include "Thread.h"
 #include "lcd_command.h"
-#include <cstring>
 #include <sstream>
-#include <string>
-#include <vector>
 
 Console::Console() : index(0) {
     _rawSerial = new BufferedSerial(USBTX, USBRX);

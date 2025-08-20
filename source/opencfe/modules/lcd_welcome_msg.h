@@ -2,10 +2,8 @@
 #define __LCD_WELCOME_MSG_H
 
 #include <mbed.h>
-
 #include "ignition.h"
 #include "lcd.h"
-#include "../subsystem.h"
 
 #define CFE_LCDWELCOME_TIME 5s
 #define CFE_LCDWELCOME_KPII_HIDE true
