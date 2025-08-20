@@ -5,9 +5,11 @@
 #include "EventFlags.h"
 #include "PinNameAliases.h"
 #include "Thread.h"
+#include "lcd_command.h"
 #include <cstring>
 #include <sstream>
 #include <string>
+#include <vector>
 
 Console::Console() : index(0) {
     _rawSerial = new BufferedSerial(USBTX, USBRX);
@@ -50,10 +52,33 @@ void Console::_threadTask() {
                             PowerStateManager::getInstance()->decaffeinate();
                          });
 
-    std::string cmd;
+    LCDCommand lcdCommand;
+
+    registerCommand("lcd", "Control the DIM LCD", [&](const std::string &args){ lcdCommand(args); }, &lcdCommand);
+
     while (true) {
         _flags->wait_all(CFE_CON_FLAG_RUN, osWaitForever, false);
-        processInput(cmd);
+        char c;
+        while (_rawSerial->readable()) {
+            if (_rawSerial->read(&c, 1) != 1) continue;
+
+            if (c == '\r' || c == '\n') {
+                _rawSerial->write("\r\n", 2);
+                processInput();
+                inputBuffer.clear();
+                printPrompt();
+            } else if ((c == '\b' || c == 0x7F)) {
+                if (!inputBuffer.empty()) {
+                    inputBuffer.pop_back();
+                    _rawSerial->write("\b \b", 3);
+                }
+            } else if (c == '\t') {
+                handleTabCompletion();
+            } else if (isprint(static_cast<unsigned char>(c))) {
+                inputBuffer.push_back(c);
+                write(&c, 1);
+            }
+        }
     }
 }
 
@@ -79,43 +104,45 @@ void Console::stop() {
     }
 }
 
-bool Console::processInput(std::string &outCommand) {
-    if (!_rawSerial->readable()) {
-        return false;
+void Console::processInput() {
+// Trim whitespace
+    auto first = inputBuffer.find_first_not_of(" \t\r\n");
+    if (first == std::string::npos) return;
+    auto last = inputBuffer.find_last_not_of(" \t\r\n");
+    std::string line = inputBuffer.substr(first, last - first + 1);
+
+    if (line.empty()) return;
+
+    std::istringstream iss(line);
+    std::string cmd;
+    iss >> cmd;
+
+    std::string args;
+    std::getline(iss, args);
+    if (!args.empty() && args[0] == ' ') args.erase(0, 1);
+
+    if (cmd == "?") {
+        registry.printHelp();
+        return;
     }
 
-    char c;
-    if (_rawSerial->read(&c, 1) == 0) {
-        return false;
-    }
+    const Command* found = registry.findCommand(cmd);
+    if (found) {
+        if (args == "?") {
+            if (found->completer) {
+                found->completer->printHelp(cmd);
+            } else {
+                std::string msg = "No help available for " + found->name + "\r\n";
+                write(msg.c_str(), msg.size());
+            }
+            return;
+        }
 
-    if (c == '\r' || c == '\n') {
-        _rawSerial->write("\r\n", 2);
-        buffer[index] = '\0';
-        outCommand = std::string(buffer);
-        handleCommand(outCommand);
-        index = 0;
-        printPrompt();
-        return true;
+        found->handler(args);
+    } else {
+        const char *msg = "Unknown or ambiguous command. Type 'help' or '?'\r\n";
+        write(msg, std::strlen(msg));
     }
-
-    if ((c == '\b' || c == 127) && index > 0) {
-        index--;
-        _rawSerial->write("\b \b", 3);
-        return false;
-    }
-
-    if (c == '\t') {
-        handleTabCompletion();
-        return false;
-    }
-
-    if (index < MAX_BUFFER - 1 && c >= 32 && c < 127) {
-        buffer[index++] = c;
-        echoChar(c);
-    }
-
-    return false;
 }
 
 void Console::printPrompt() {
@@ -125,8 +152,8 @@ void Console::printPrompt() {
 
 void Console::echoChar(char c) { _rawSerial->write(&c, 1); }
 
-void Console::registerCommand(const std::string &name, const std::string &help, CommandRegistry::CommandHandler handler) {
-    registry.registerCommand(name, help, handler);
+void Console::registerCommand(const std::string &name, const std::string &help, std::function<void(const std::string& args)> handler, CompletableCommand* completer) {
+    registry.registerCommand(name, help, handler, completer);
 }
 
 void Console::handleCommand(const std::string &line) {
@@ -141,13 +168,27 @@ void Console::handleCommand(const std::string &line) {
     std::getline(iss, args);
     if (!args.empty() && args[0] == ' ') args.erase(0, 1);
 
-    auto found = registry.findCommand(cmd);
-    if (found) {
-        found->handler(args);
-    } else {
-        const char *msg = "Unknown command. Type 'help' for list.\r\n";
-        write(msg);
+    if (cmd == "?") {
+        registry.printHelp();
+        return;
     }
+
+    auto found = registry.findCommand(cmd);
+    if (!found) {
+        const char *msg = "Unknown command. Type 'help' or '?' for list.\r\n";
+        write(msg);
+        return;
+    }
+
+    if (args == "?") {
+        std::string line = "Subcommands for " + found->name + ":\r\n";
+        write(line.c_str(), line.size());
+
+        found->handler("?");
+        return;
+    }
+
+    found->handler(args);
 }
 
 void Console::commandHelp(const std::string &) {
@@ -160,31 +201,54 @@ void Console::commandHelp(const std::string &) {
 }
 
 void Console::handleTabCompletion() {
-    buffer[index] = '\0';
-    std::string current(buffer);
+    std::istringstream iss(inputBuffer);
+    std::string first;
+    iss >> first;
 
-    auto matches = registry.complete(current);
+    std::string rest;
+    std::getline(iss, rest);
+    if (!rest.empty() && rest[0] == ' ') rest.erase(0, 1);
+
+    if (first.empty()) return;
+
+    const Command* cmd = registry.findCommand(first);
+    if (!cmd) {
+        auto matches = registry.complete(first);
+        applyCompletion(matches, first);
+        return;
+    }
+
+    if (cmd->completer) {
+        auto matches = cmd->completer->complete(rest);
+        applyCompletion(matches, rest);
+        return;
+    }
+
+    auto matches = registry.complete(first);
+    applyCompletion(matches, first);
+}
+
+void Console::applyCompletion(const std::vector<std::string>& matches, const std::string& prefix) {
     if (matches.empty()) return;
 
     if (matches.size() == 1) {
-        const std::string &match = matches[0];
-        if (match.size() > current.size()) {
-            std::string suffix = match.substr(current.size());
-            for (char ch : suffix) {
-                if (index < MAX_BUFFER - 1) {
-                    buffer[index++] = ch;
-                    echoChar(ch);
-                }
-            }
+        // replace suffix of buffer with match
+        size_t pos = inputBuffer.rfind(prefix);
+        if (pos != std::string::npos) {
+            inputBuffer.replace(pos, prefix.size(), matches[0]);
+            const char *seq = "\033[K"; // clear to end of line
+            write(seq, std::strlen(seq));
+            write(inputBuffer.c_str(), inputBuffer.size());
         }
     } else {
-        write("\r\n");
+        const char *nl = "\r\n";
+        write(nl, 2);
         for (auto &m : matches) {
             std::string line = "  " + m + "\r\n";
             write(line.c_str(), line.size());
         }
-        write("OpenCFE>");
-        write(buffer, index);
+        printPrompt();
+        write(inputBuffer.c_str(), inputBuffer.size());
     }
 }
 

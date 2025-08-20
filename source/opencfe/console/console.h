@@ -5,6 +5,7 @@
 #include "command_registry.h"
 #include <mbed.h>
 #include <string>
+#include <vector>
 
 #define CFE_CON_FLAG_RUN (1UL << 1) // Allows the console thread to run
 
@@ -19,9 +20,9 @@ public:
         return &instance;
     }
 
-    bool processInput(std::string &outCommand);
+    void processInput();
 
-    void registerCommand(const std::string &name, const std::string &help, CommandRegistry::CommandHandler handler);
+    void registerCommand(const std::string &name, const std::string &help, std::function<void(const std::string& args)> handler, CompletableCommand* completer = nullptr);
 
     void init();
     void start();
@@ -43,7 +44,7 @@ private:
     bool _hasStarted;
 
     static constexpr size_t MAX_BUFFER = 128;
-    char buffer[MAX_BUFFER];
+    std::string inputBuffer;
     size_t index;
 
     CommandRegistry registry;
@@ -52,6 +53,7 @@ private:
     void echoChar(char c);
     void handleCommand(const std::string &line);
     void handleTabCompletion();
+    void applyCompletion(const std::vector<std::string>& matches, const std::string& prefix);
 
     void commandHelp(const std::string &args);
 };
