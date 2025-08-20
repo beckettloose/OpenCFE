@@ -193,14 +193,13 @@ void Console::handleTabCompletion() {
 void Console::applyCompletion(const std::vector<std::string>& matches, const std::string& prefix) {
     if (matches.empty()) return;
 
-    // BUG: Something in this logic needs to be fixed, applying completions is broken
     if (matches.size() == 1) {
-        // replace suffix of buffer with match
         size_t pos = inputBuffer.rfind(prefix);
         if (pos != std::string::npos) {
             inputBuffer.replace(pos, prefix.size(), matches[0]);
-            const char *seq = "\033[K"; // clear to end of line
+            const char *seq = "\r\033[K"; // clear line
             write(seq, std::strlen(seq));
+            printPrompt();
             write(inputBuffer.c_str(), inputBuffer.size());
         }
     } else {
