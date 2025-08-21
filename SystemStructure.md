@@ -1,32 +1,48 @@
 # OpenCFE System Structure
 
-- Power State Manager
-    - Console
-        - Command
-    - Subsystem
-        - Module
-- D2 HAL
-    - Session Management and Keepalive
-    - Standard Parameters
-        - ECU ID
-        - Respone CAN ID
+- Power State Manager: Controls wakeup and shutdown, allowing system to enter low power sleep correctly.
+- Console: Provides the user with a text-based ui for controlling OpenCFE
+    - Command
+- Subsystem: Handles the starting and stopping of high level modules
+    - Module: An individual software component that implements a group of functions.
+- D2 HAL: Maps functionality of the car to software objects and functions
+    - Session Management: Vehicle discovery, status, and keepalive
+
     - Platform (P1, P2, P3)
+        - Keepalive Configuration
         - ECU (CEM, ECM, CCM, DIM)
-            - Standard Data
-            - Function Group (CEM 1A01)
-                - Function Item (Low Beam Relay, Tachometer)
+            - Standard Parameters
+                - ECU ID
+                - Respone CAN ID
+            - D2 Sequence Manager Instance
+            - Physical Group: A group of physical items controlled in the same D2 message.
+                - Physical Item: A value that is controlled individually
+                    - bit/byte offset and length
                     - Templated Type? (int, bool, double)
                     - Get/Set Functions
-                    - Function to encode the data
-- CAN Decode HAL (Runs as module)
-    - Parameter Group (Steering Wheel Controls, Daylight Sensor)
+                    - encode the data from standard format
+                    - bitmask controls
+            - Physical Activation (DIM Gauge Test)
+                - Function call to execute activation
+    - Generic Interface Layer: Common to all platforms and model years, maps logical items to physical items (may need to change this structure to allow swapping between platforms)
+        - Logical Group (Doors / Windows, Gauge Cluster, Exterior Lighting)
+            - Logical Item (Low Beam, High Beam, Left Turn Signal, Tachometer)
+                - activate/deactivate functions
+                - set/get functions
+                - mutex lock per item
+                - Maps to different physical item per platform
+- CAN Decode HAL: Decode CAN messages sent by the car
+    - Parameter Group: A logical group of CAN parameters
         - Parameter (Daylight Value, Key Position)
-- D2 Protocol Library
-    - D2 <-> CAN Frame Encode/Decode
+- D2 Protocol Library: Low level D2 libraries, platform and model year agnostic
+    - D2 <-> CAN Frame Encode/Decode: Convert between D2 messages and CAN frames
     - D2 Message Builder
         - Create base buffers for certain message types
-            - Hanlde total data size properly
-        - Apply data to
-    - D2 Response Decoder
+            - Handle total data size properly
+        - Apply data to a message buffer
+    - D2 Response Decoder: Analyze D2 response messages to determine action
         - Determine response status
         - Check error type
+    - D2 Sequencer: Puts messages from multiple sources in to a serial queue per ECU
+        - Send messages one at a time and wait for response
+        - Automatic timeout and error reporting

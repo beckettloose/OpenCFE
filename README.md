@@ -20,17 +20,19 @@ Feature availability depends on platform, model year, and options, but some exam
 - [ ] Basic serial CLI for testing and diagnostics (similar to Cisco IOS)
     - [x] Execute code in a way that is PSM compatible (allows system to sleep properly)
     - [x] Accept commands and call appropriate functions
-    - [x] Shorthand auto-match (`conf -> configure`)
-    - [ ] Tab completion on multiple levels
-    - [ ] Show help on `?` key, filter based on what's already typed
-    - [ ] Basic logging system with log level, module name, message, and automatic timestamp
+    - [x] Shorthand auto-match (`caf -> caffeinate`)
+    - [x] Tab completion on multiple levels
+    - [x] Basic logging system with log level, module name, and message
     - [ ] Commands to filter output by log level and module
     - [ ] Synchronus logging that prevents log messages from clobbering your prompt
+    - [ ] Show help on `?` key, filter based on what's already typed
+    - [ ] Logging timestamp?
 - [ ] Establish CAN communications with vehicle and test simple functions
-- [ ] Finish and test CAN based wakeup and shutdown controls (Wakes up when pin is pulled low by test lead, haven't tried with CAN transciever yet, Want to enable sleep debugging to see if we are actually sleeping)
+- [ ] Finish and test CAN based wakeup and shutdown controls
     - [x] Works when shorting wire to ground
     - [ ] Works when connected to an actual CAN transceiver
-- [ ] Design abstraction for different model years of vehicle (for CAN IDs and baud rates) (Need to determine if this will be implemented with conditional compilation or automatic detection at runtime)
+    - [ ] Verify functionality with Sleep Debugging Mode
+- [ ] Design abstraction for different model years of vehicle (different CAN IDs, baud rates, and message data) (Current plan is avoid conditional compilation and dynamically determine the modules to be loaded at runtime based on a configuration).
 - [ ] Figure out how to handle arbitration of multi-parameter D2 IO controls between different modules. (Turn Signals, Headlights, and Wipers all share one message) (Maybe use a mutex for locking, then track ownership of the mutex to determine if the mask bit should be set? We will definitely want to avoid unnecessary releases of this lock as it requires the whole message to be refreshed.)
 - [ ] Create full list of planned subsystems and which ones are supported per vehicle
 - [ ] Find way to deal with K-Line keepalive on 99-04 vehicles (or bypass relay)
