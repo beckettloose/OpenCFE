@@ -16,15 +16,18 @@ PowerStateManager::PowerStateManager() {
     _psmLED = new DigitalOut(PB_0);
 
     _console = Console::getInstance();
+    _log = Logging::getInstance();
 
     _caffeinated = false;
 }
 
 void PowerStateManager::start() {
+    _log->debug("PSM", "Starting...");
     _subsystem->init();
     _subsystemThread->start(callback(this, &PowerStateManager::_subsystemTask));
     _console->init();
 
+    _log->debug("PSM", "Init complete, waiting for wakeup signal");
     while (true) {
         flags->wait_all(CFE_PSM_FLAG_MAIN_WAKEUP, osWaitForever, false);
         flags->set(CFE_PSM_FLAG_SUB_ENABLE);
@@ -34,20 +37,26 @@ void PowerStateManager::start() {
 }
 
 void PowerStateManager::requestWakeup() {
+    // TODO: fix mutex issue in logger becase wakeup calls this from an ISR
+
+    // _log->debug("PSM", "Got wake-up request");
     flags->set(CFE_PSM_FLAG_MAIN_WAKEUP);
 }
 
 void PowerStateManager::requestShutdown() {
     if (!_caffeinated) {
+        _log->debug("PSM", "Got shutdown request");
         flags->set(CFE_PSM_FLAG_SUB_SHUTDOWN);
     }
 }
 
 void PowerStateManager::caffeinate() {
+    _log->info("PSM", "Caffeinating...");
     _caffeinated = true;
 }
 
 void PowerStateManager::decaffeinate() {
+    _log->info("PSM", "Decaffeinating...");
     _caffeinated = false;
 }
 
@@ -64,11 +73,15 @@ void PowerStateManager::_subsystemTask() {
     bool shouldSetCleanFlag = false;
 
     while (true) {
+        if (!(flags->get() & CFE_PSM_FLAG_SUB_ENABLE)) {
+            _log->debug("PSM", "Subsystem waiting for enable signal");
+        }
         flags->wait_all(CFE_PSM_FLAG_SUB_ENABLE, osWaitForever, false);
 
         flags->clear(CFE_PSM_FLAG_MAIN_SUB_CLEAN);
 
         if (flags->get() & CFE_PSM_FLAG_SUB_SHUTDOWN) {
+            _log->debug("PSM", "Subsystem received shutdown signal");
             _subsystem->stop();
             _console->stop();
 
@@ -86,6 +99,7 @@ void PowerStateManager::_subsystemTask() {
             shouldSetCleanFlag = false;
             flags->set(CFE_PSM_FLAG_MAIN_SUB_CLEAN);
             flags->clear(CFE_PSM_FLAG_SUB_ENABLE | CFE_PSM_FLAG_SUB_SHUTDOWN);
+            _log->debug("PSM", "Subsystem finished shutting down");
             _canWakeupInterrupt->enable_irq();
             _psmLED->write(0);
         }

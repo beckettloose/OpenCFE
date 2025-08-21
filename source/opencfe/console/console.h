@@ -50,6 +50,8 @@ public:
     */
     void write(const char *msg);
 
+    void loggerWrite(std::string message);
+
 protected:
     // The internal function executed by the console thread.
     void _threadTask();
@@ -114,6 +116,8 @@ private:
     * Print a list of available commands.
     */
     void commandHelp(const std::string &args);
+
+    bool _loggerHasWritten;
 };
 
 #endif // !__CONSOLE_H

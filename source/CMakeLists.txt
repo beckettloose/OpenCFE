@@ -11,6 +11,7 @@ add_executable(${PROJECT_NAME}
     "${CMAKE_CURRENT_SOURCE_DIR}/opencfe/console/console.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/opencfe/console/command_registry.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/opencfe/console/lcd_command.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/opencfe/console/logging.cpp"
 )
 
 target_link_libraries(${PROJECT_NAME} mbed-os VolvoLib)

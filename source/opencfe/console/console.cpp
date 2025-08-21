@@ -32,14 +32,12 @@ void Console::_threadTask() {
                          });
 
     registerCommand("caffeinate", "Prevent the system from sleeping",
-                         [this](const std::string &args) {
-                            write("Caffeinating...\r\n");
+                         [](const std::string &args) {
                             PowerStateManager::getInstance()->caffeinate();
                          });
 
     registerCommand("decaffeinate", "Allow the system to sleep",
-                         [this](const std::string &args){
-                            write("Decaffeinating...\r\n");
+                         [](const std::string &args){
                             PowerStateManager::getInstance()->decaffeinate();
                          });
 
@@ -56,9 +54,16 @@ void Console::_threadTask() {
             // Ensure we read exactly 1 byte
             if (_rawSerial->read(&c, 1) != 1) continue;
 
+            if (_loggerHasWritten) {
+                _loggerHasWritten = false;
+                write("\r\n");
+                printPrompt();
+                write(inputBuffer.c_str());
+            }
+
             if (c == '\r' || c == '\n') {
                 // Handle enter/return keys
-                write("\r\n", 2);
+                write("\r\n");
                 processCommand();
                 inputBuffer.clear();
                 printPrompt();
@@ -224,3 +229,10 @@ void Console::write(const void *buf, size_t len) {
 void Console::write(const char *msg) {
     write(msg, std::strlen(msg));
 }
+
+void Console::loggerWrite(std::string msg) {
+    _loggerHasWritten = true;
+    // write("\r\n");
+    write(msg.c_str(), msg.size());
+}
+

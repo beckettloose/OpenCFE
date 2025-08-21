@@ -2,6 +2,7 @@
 #define __POWER_STATE_MANAGER_H
 
 #include <mbed.h>
+#include "console/logging.h"
 #include "subsystem.h"
 #include "console/console.h"
 
@@ -97,6 +98,8 @@ private:
     * Simple UART CLI for testing and debug.
     */
     Console* _console;
+
+    Logging* _log;
 
     /**
     * True when the PSM is prevented from shutting down.
