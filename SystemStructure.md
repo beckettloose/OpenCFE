@@ -5,15 +5,15 @@
     - Command
 - Subsystem: Handles the starting and stopping of high level modules
     - Module: An individual software component that implements a group of functions.
+- Persistent Config: Manages persistent configuration variables
 - D2 HAL: Maps functionality of the car to software objects and functions
     - Session Management: Vehicle discovery, status, and keepalive
-
     - Platform (P1, P2, P3)
         - Keepalive Configuration
         - ECU (CEM, ECM, CCM, DIM)
             - Standard Parameters
                 - ECU ID
-                - Respone CAN ID
+                - Response CAN ID
             - D2 Sequence Manager Instance
             - Physical Group: A group of physical items controlled in the same D2 message.
                 - Physical Item: A value that is controlled individually

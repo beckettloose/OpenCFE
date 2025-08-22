@@ -6,8 +6,9 @@
 
 namespace Volvo {
 
-/* Implements functions regarding D2 message processing (does not handle flow or
- * session management. */
+/**
+ * Utility functions for converting between D2 Messages and CAN Frames.
+ */
 class D2_Message {
 public:
     /* Represents the data contained in the header of a D2 CAN frame */
@@ -17,12 +18,6 @@ public:
         uint8_t numSigBytes;
         FrameHeader(): type(Type::INVALID), sequenceNumber(0), numSigBytes(0) {}
     } FrameHeader;
-
-    /* Start a D2 session and begin sending the keepalive signal */
-    // void startSession();
-
-    /* End the D2 session and cancel the keepalive signal */
-    // void endSession();
 
     /* Calculate the expected number of CAN frames for a D2 message */
     static uint32_t numFrames(uint32_t numBytes);

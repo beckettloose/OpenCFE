@@ -1,12 +1,14 @@
-#ifndef __D2_FLOW_H
-#define __D2_FLOW_H
+#ifndef __D2_SEQUENCER_H
+#define __D2_SEQUENCER_H
 
 namespace Volvo {
 
-/* Implements flow management for the D2 Protocol. This handles the process of
-* sending a message and waiting for it's response. Additionally, messages are
-* inspected to determine if the response was an error. */
-class D2_Flow {
+/**
+ * Implements sequence management for the D2 Protocol. This handles the process
+ * of sending a message and waiting for it's response. Additionally, messages
+ * are inspected to determine if the response was an error.
+ */
+class D2_Sequencer {
 public:
     /* Represents the current state of a D2 Flow */
     // typedef struct FlowState {
@@ -18,4 +20,4 @@ public:
 
 }
 
-#endif // !__D2_FLOW_H
+#endif // !__D2_SEQUENCER_H
