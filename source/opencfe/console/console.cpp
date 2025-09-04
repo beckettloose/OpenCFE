@@ -42,8 +42,10 @@ void Console::_threadTask() {
                          });
 
     LCDCommand lcdCommand;
-
     registerCommand("lcd", "Control the DIM LCD", [&](const std::string &args){ lcdCommand(args); }, &lcdCommand);
+
+    Logging::LogCommand logCommand;
+    registerCommand("log", "Change the logger settings", [&](const std::string &args){ logCommand(args); }, &logCommand);
 
     while (true) {
         // EventFlags.wait() allows us to enter low power sleep
