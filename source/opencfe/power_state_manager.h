@@ -24,6 +24,19 @@ public:
         return &instance;
     }
 
+    typedef enum WakeupReason {
+        UNKNOWN,
+        CANBUS,
+        SERIAL
+    } WakeupReason;
+
+    WakeupReason getWakeupReason() { return _wakeupReason; }
+
+    /**
+     * Get the wakeup reason as a string.
+     */
+    std::string getWakeupString();
+
     /**
     * Signals between the PSM, Subsystem, and Hardware to control the wake-up
     * and shutdown process.
@@ -34,7 +47,7 @@ public:
     void start();
 
     // Tell the power state manager to begin the wake-up process.
-    void requestWakeup();
+    void requestWakeup(WakeupReason reason);
 
     /**
     * Tell the subsystem thread to begin shutting down.
@@ -57,6 +70,12 @@ public:
     * interrupt.
     */
     void canWakeupISR();
+
+    /**
+     * The Interrupt Service Routine (ISR) that responds to the serial wakeup
+     * interrupt.
+     */
+    void serialWakeupISR();
 protected:
     /**
     * The function executed by the subsystem thread.
@@ -70,6 +89,17 @@ private:
     * activity.
     */
     InterruptIn* _canWakeupInterrupt;
+
+    /**
+     * Hardware interrupt on the serial RX pin so that we are woken up when the
+     * user starts typing to the console.
+     */
+    InterruptIn* _serialWakeupInterrupt;
+
+    /**
+     * Keep track of the reason why we woke up.
+     */
+    WakeupReason _wakeupReason;
 
     /**
     * Thread that manages the subsystem lifecycle and executes events posted by

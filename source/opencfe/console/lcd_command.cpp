@@ -74,7 +74,7 @@ void LCDCommand::lcdLock(const std::string &args) {
         return;
     }
 
-    con->write("Trying to acquire LCD lock for 5 seconds... ");
+    con->write("Waiting on LCD lock for up to 5 seconds... ");
     if (!lcd->mutex->trylock_for(5s)) {
         con->write("Failed!\r\n");
         return;

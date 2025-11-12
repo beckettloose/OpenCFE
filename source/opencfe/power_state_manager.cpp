@@ -9,6 +9,11 @@ PowerStateManager::PowerStateManager() {
     _canWakeupInterrupt = new InterruptIn(PD_0); // this is the CAN_LS rx pin
     _canWakeupInterrupt->fall(callback(this, &PowerStateManager::canWakeupISR));
 
+    _serialWakeupInterrupt = new InterruptIn(USBRX); // TODO: Make this the serial rx pin
+    _serialWakeupInterrupt->fall(callback(this, &PowerStateManager::serialWakeupISR));
+
+    _wakeupReason = UNKNOWN;
+
     _subsystemThread = new Thread;
     _systemEventQueue = mbed_event_queue();
     _subsystem = Subsystem::getInstance();
@@ -21,6 +26,15 @@ PowerStateManager::PowerStateManager() {
     _caffeinated = false;
 }
 
+std::string PowerStateManager::getWakeupString() {
+    switch (_wakeupReason) {
+        case CANBUS: return "CAN Bus";
+        case SERIAL: return "Serial";
+        case UNKNOWN: return "unknown";
+        default: return "unknown";
+    }
+}
+
 void PowerStateManager::start() {
     _log->debug("PSM", "Starting...");
     _subsystem->init();
@@ -30,16 +44,19 @@ void PowerStateManager::start() {
     _log->debug("PSM", "Init complete, waiting for wakeup signal");
     while (true) {
         flags->wait_all(CFE_PSM_FLAG_MAIN_WAKEUP, osWaitForever, false);
+
+        std::string msg = "Got wake-up request from " + getWakeupString() + "\r\n";
+        _log->debug("PSM", msg);
+        _wakeupReason = UNKNOWN; // unset wakeup reason
+
         flags->set(CFE_PSM_FLAG_SUB_ENABLE);
         flags->clear(CFE_PSM_FLAG_MAIN_WAKEUP);
         _psmLED->write(1);
     }
 }
 
-void PowerStateManager::requestWakeup() {
-    // TODO: fix mutex issue in logger becase wakeup calls this from an ISR
-
-    // _log->debug("PSM", "Got wake-up request");
+void PowerStateManager::requestWakeup(WakeupReason reason) {
+    _wakeupReason = reason;
     flags->set(CFE_PSM_FLAG_MAIN_WAKEUP);
 }
 
@@ -66,7 +83,14 @@ bool PowerStateManager::isCaffeinated() {
 
 void PowerStateManager::canWakeupISR() {
     _canWakeupInterrupt->disable_irq();
-    requestWakeup();
+    _serialWakeupInterrupt->disable_irq();
+    requestWakeup(CANBUS);
+}
+
+void PowerStateManager::serialWakeupISR() {
+    _serialWakeupInterrupt->disable_irq();
+    _canWakeupInterrupt->disable_irq();
+    requestWakeup(SERIAL);
 }
 
 void PowerStateManager::_subsystemTask() {

@@ -78,6 +78,7 @@ void Console::_threadTask() {
             } else if (c == '\t') {
                 // Handle tab key
                 handleTabCompletion();
+            // TODO: handle ? key for contextual help
             } else if (isprint(static_cast<unsigned char>(c))) {
                 // Handle regular characters
                 inputBuffer.push_back(c);
