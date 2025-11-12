@@ -1,8 +1,10 @@
 # OpenCFE
 
-OpenCFE is a piggyback module for your P2 Volvo's CEM that enables additional functionality by reading and writing mesages on the vehicle's CANbus network.
+OpenCFE is a piggyback computer module for your P2 Volvo that uses custom software to enhance many vehicle functions.
 
-Feature availability depends on platform, model year, and options, but some examples include:
+At the moment, this project is only compatible with Volvos built on the P2 platform. Support may eventually be added for P1 and P3 cars, but don't count on it.
+
+Feature availability depends on model year and options, but some examples include:
 - Automatically close windows when locking car
 - Automatically turn on heated seats in cold conditions
 - Show welcome and goodbye messages on DIM LCD
@@ -27,6 +29,12 @@ Feature availability depends on platform, model year, and options, but some exam
     - [ ] Synchronus logging that prevents log messages from clobbering your prompt
     - [ ] Show help on `?` key, filter based on what's already typed
     - [ ] Logging timestamp?
+    - [ ] Wakeup event triggered by Serial RX pin
+- [ ] Additional utility functions
+    - [x] Caffeinate mode (prevent auto sleep)
+    - [ ] Monitor a CAN message
+    - [ ] Get and set values in persistent storage
+    - [ ] Reset different parts of the software stack
 - [ ] Establish CAN communications with vehicle and test simple functions
 - [ ] Finish and test CAN based wakeup and shutdown controls
     - [x] Works when shorting wire to ground
