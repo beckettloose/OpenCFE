@@ -3,6 +3,18 @@
 
 Logging::Logging() {
     con = Console::getInstance();
+    con->registerCommand("logtest", "Test logging subsystem",
+                    [](const std::string &args) {
+                        ::debug("Logging test\r\n");
+                    });
+
+    con->registerCommand("2logtest", "Test logging subsystem",
+                    [this](const std::string &args) {
+                        this->debug("logger", "Logging test");
+                        this->debug("logger", "Logging test");
+                        this->debug("logger", "Logging test");
+                        this->debug("logger", "Logging test");
+                    });
 }
 
 void Logging::debug(std::string module, std::string message) {

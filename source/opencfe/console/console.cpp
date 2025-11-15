@@ -58,7 +58,7 @@ void Console::_threadTask() {
 
             if (_loggerHasWritten) {
                 _loggerHasWritten = false;
-                write("\r\n");
+                // write("\r\n");
                 printPrompt();
                 write(inputBuffer.c_str());
             }
@@ -68,7 +68,7 @@ void Console::_threadTask() {
                 write("\r\n");
                 processCommand();
                 inputBuffer.clear();
-                printPrompt();
+                // printPrompt();
             } else if ((c == '\b' || c == 0x7F)) {
                 // Handle backspace key
                 if (!inputBuffer.empty()) {
@@ -96,7 +96,8 @@ void Console::start() {
     if (!_hasStarted) {
         _flags->set(CFE_CON_FLAG_RUN);
         _rawSerial->enable_input(true);
-        write("\r\n\nOpenCFE>");
+        // write("\r\n\nOpenCFE>");
+        write("\r\nPress Enter to Begin...\r\n\n");
         _hasStarted = true;
     }
 }
@@ -113,11 +114,17 @@ void Console::stop() {
 void Console::processCommand() {
     // Trim white space from start and end of input buffer
     auto first = inputBuffer.find_first_not_of(" \t\r\n");
-    if (first == std::string::npos) return;
+    if (first == std::string::npos) {
+        printPrompt();
+        return;
+    }
     auto last = inputBuffer.find_last_not_of(" \t\r\n");
     std::string line = inputBuffer.substr(first, last - first + 1);
 
-    if (line.empty()) return;
+    if (line.empty()) {
+        printPrompt();
+        return;
+    }
 
     std::istringstream iss(line);
     std::string cmd;
@@ -129,6 +136,7 @@ void Console::processCommand() {
 
     if (cmd == "?") {
         registry.printHelp();
+        printPrompt();
         return;
     }
 
@@ -140,13 +148,18 @@ void Console::processCommand() {
             } else {
                 std::string msg = "No help available for " + found->name + "\r\n";
                 write(msg.c_str(), msg.size());
+                printPrompt();
             }
             return;
         }
         found->handler(args);
+        if (!_loggerHasWritten) {
+            printPrompt();
+        }
     } else {
         const char *msg = "Unknown or ambiguous command. Type 'help' or '?'\r\n";
         write(msg, std::strlen(msg));
+        printPrompt();
     }
 }
 
@@ -235,7 +248,8 @@ void Console::write(const char *msg) {
 
 void Console::loggerWrite(std::string msg) {
     _loggerHasWritten = true;
-    // write("\r\n");
+    const char *seq = "\r\033[K";
+    write(seq, std::strlen(seq));
     write(msg.c_str(), msg.size());
 }
 
