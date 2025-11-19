@@ -2,6 +2,9 @@
 
 OpenCFE is a piggyback computer module for your P2 Volvo that uses custom software to enhance many vehicle functions.
 
+> [!WARNING]
+> This project is work-in-progress! Do not expect anything to work, as no stable version exists.
+
 At the moment, this project is only compatible with Volvos built on the P2 platform. Support may eventually be added for P1 and P3 cars, but don't count on it.
 
 Feature availability depends on model year and options, but some examples include:
@@ -47,9 +50,9 @@ Feature availability depends on model year and options, but some examples includ
 - [ ] Determine processor specs required for production hardware revision
 
 ## License and Open Source Guarantee Statement
-This project is distributed with a GNU GPLv2 License. See the LICENSE file for more information.
+This project is distributed under a GNU GPLv2 License. See the LICENSE file for more information.
 
-The OpenCFE project is committed to staying completely open-source forever. This should avoid a potential situation where support for OpenCFE is dropped and the rights get sold to a company that isn't interested in continuing development. There is very little reason for a project like this to be private, as it limits what the Volvo community can gain from the research and development efforts of this project. Additionally, it allows the community to contribute their own changes and improvements to make OpenCFE better for everyone.
+The OpenCFE project is committed to remaining open-source. Keeping the source code publicly available will ensure that users are always able to inspect and modify the code running on their device. If I am no longer able to support the project, the community will be able to fork the project and continue development separately.
 
 # Development
 When cloning the repo, be sure to either clone with `--recurse-submodules` or run the following commands if you have already cloned the repo.
@@ -63,24 +66,24 @@ git submodule update
 1. Ensure you have `cmake` and `ninja-build` installed.
 2. Install the gcc-arm compiler from the [Arm Toolchain Downloads](https://developer.arm.com/downloads/-/arm-gnu-toolchain-downloads) page.
 
-To configure the repository run the following commands from the repo root directory.
+To configure the repository run the following commands from the root directory.
 
 ```sh
 mkdir build && cd build
 cmake .. -GNinja -DCMAKE_BUILD_TYPE=Develop -DMBED_TARGET=NUCLEO_F767ZI
 ```
 
-If you use an editor or LSP that requires a `compile_commands.json` file, you can generate it by adding `-DCMAKE_EXPORT_COMPILE_COMMANDS=ON` to the end if the cmake command above.
+If you use an editor or LSP that requires a `compile_commands.json` file, you can generate it by adding `-DCMAKE_EXPORT_COMPILE_COMMANDS=ON` to the end of the `cmake` command above.
 
 ## Building
-To build the software, run the following command in the `build/` directory
+To build the firmware, run the following command from the `build/` directory
 
 ```sh
 ninja
 ```
 
 ## Flashing Firmware
-To flash the firmware to the hardware, connect the device to your computer and run the following command from the build directory.
+To flash the firmware, connect the device to your computer and run the following command from the `build/` directory.
 
 ```sh
 ninja flash-OpenCFE
