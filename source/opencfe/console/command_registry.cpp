@@ -29,11 +29,18 @@ std::vector<std::string> CommandRegistry::complete(const std::string &prefix) co
     return matches;
 }
 
-void CommandRegistry::printHelp() const {
+void CommandRegistry::printHelp(const std::string &prefix) const {
     Console *con = Console::getInstance();
-    con->write("Available commands:\r\n");
+    if (prefix.empty()) {
+        con->write("Available commands:\r\n");
+    }
     for(auto &c : commands) {
         std::string line = "  " + c.name + " - " + c.help + "\r\n";
-        con->write(line.c_str(), line.size());
+        if (prefix.empty()) {
+            con->write(line.c_str(), line.size());
+        } else if (c.name.rfind(prefix, 0) == 0) {
+            con->write(line.c_str(), line.size());
+        }
     }
+    con->printFullPrompt();
 }

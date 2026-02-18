@@ -78,7 +78,9 @@ void Console::_threadTask() {
             } else if (c == '\t') {
                 // Handle tab key
                 handleTabCompletion();
-            // TODO: handle ? key for contextual help
+            } else if (c == '?') {
+                // Handle ? key
+                handleContextHelp();
             } else if (isprint(static_cast<unsigned char>(c))) {
                 // Handle regular characters
                 inputBuffer.push_back(c);
@@ -134,12 +136,6 @@ void Console::processCommand() {
     std::getline(iss, args);
     if (!args.empty() && args[0] == ' ') args.erase(0, 1);
 
-    if (cmd == "?") {
-        registry.printHelp();
-        printPrompt();
-        return;
-    }
-
     const Command* found = registry.findCommand(cmd);
     if (found) {
         if (args == "?") {
@@ -168,18 +164,29 @@ void Console::printPrompt() {
     write(prompt, std::strlen(prompt));
 }
 
+void Console::printFullPrompt() {
+    printPrompt();
+    write(inputBuffer.c_str(), inputBuffer.size());
+}
+
 void Console::echoChar(char c) { write(&c, 1); }
 
 void Console::registerCommand(const std::string &name, const std::string &help, std::function<void(const std::string& args)> handler, CompletableCommand* completer) {
     registry.registerCommand(name, help, handler, completer);
 }
 
-void Console::commandHelp(const std::string &) {
-    const char *header = "Available commands:\r\n";
-    write(header, std::strlen(header));
+void Console::commandHelp(const std::string &prefix) {
+    if (prefix.empty()) {
+        const char *header = "Available commands:\r\n";
+        write(header, std::strlen(header));
+    }
     for (auto &c : registry.list()) {
         std::string line = "  " + c.name + " - " + c.help + "\r\n";
-        write(line.c_str(), line.size());
+        if (prefix.empty()) {
+            write(line.c_str(), line.size());
+        } else if (c.name.rfind(prefix, 0) == 0) {
+            write(line.c_str(), line.size());
+        }
     }
 }
 
@@ -209,6 +216,63 @@ void Console::handleTabCompletion() {
 
     auto matches = registry.complete(first);
     applyCompletion(matches, first);
+}
+
+void Console::handleContextHelp() {
+    // Trim white space from start and end of input buffer
+    auto first = inputBuffer.find_first_not_of(" \t\r\n");
+    if (first == std::string::npos) {
+        write("\r\n");
+        registry.printHelp("");
+        return;
+    }
+    auto last = inputBuffer.find_last_not_of(" \t\r\n");
+    std::string line = inputBuffer.substr(first, last - first + 1);
+
+    if (line.empty()) {
+        write("\r\n");
+        registry.printHelp("");
+        return;
+    }
+
+    std::istringstream iss(line);
+    std::string cmd;
+    iss >> cmd;
+
+    std::string args;
+    std::getline(iss, args);
+    if (!args.empty() && args[0] == ' ') args.erase(0, 1);
+
+   if (cmd == "") {
+        registry.printHelp("");
+        return;
+    }
+
+    write("\r\n");
+
+    const Command* found = registry.findCommand(cmd);
+    if (found) {
+        // if (args == "") {
+            if (found->completer) {
+                std::string prefix = args;
+                int firstChar = args.find_first_not_of(" ");
+                args.erase(0, firstChar);
+                write(args.c_str(), args.size());
+                found->completer->printHelp(prefix);
+            } else {
+                std::string msg = "No help available for " + found->name + "\r\n";
+                write(msg.c_str(), msg.size());
+                printFullPrompt();
+            }
+            return;
+        // }
+        if (!_loggerHasWritten) {
+            printFullPrompt();
+        }
+    } else {
+        commandHelp(inputBuffer);
+        printFullPrompt();
+    }
 }
 
 void Console::applyCompletion(const std::vector<std::string>& matches, const std::string& prefix) {

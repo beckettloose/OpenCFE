@@ -52,6 +52,16 @@ public:
 
     void loggerWrite(std::string message);
 
+    /**
+    * Print the prompt text to the screen "OpenCFE>".
+    */
+    void printPrompt();
+
+    /**
+     * Prints the prompt itself as well as the input buffer contents.
+     */
+    void printFullPrompt();
+
 protected:
     // The internal function executed by the console thread.
     void _threadTask();
@@ -92,11 +102,6 @@ private:
     CommandRegistry registry;
 
     /**
-    * Print the prompt text to the screen "OpenCFE>".
-    */
-    void printPrompt();
-
-    /**
     * Echo a single char to the screen.
     */
     void echoChar(char c);
@@ -108,6 +113,12 @@ private:
     void handleTabCompletion();
 
     /**
+    * Print contextual help for a command. Called when the user presses the '?'
+    * key.
+    */
+    void handleContextHelp();
+
+    /**
     * Update the input buffer with the completed command.
     */
     void applyCompletion(const std::vector<std::string>& matches, const std::string& prefix);
@@ -115,7 +126,7 @@ private:
     /**
     * Print a list of available commands.
     */
-    void commandHelp(const std::string &args);
+    void commandHelp(const std::string &prefix);
 
     bool _loggerHasWritten;
 };

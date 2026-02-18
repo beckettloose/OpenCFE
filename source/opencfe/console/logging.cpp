@@ -70,7 +70,7 @@ void Logging::LogCommand::operator()(const std::string &args) {
     iss >> subcmd;
 
     if (subcmd.empty() || subcmd == "?") {
-        registry.printHelp();
+        registry.printHelp("");
         return;
     }
 
@@ -96,8 +96,8 @@ std::vector<std::string> Logging::LogCommand::complete(const std::string &prefix
     return registry.complete(prefix);
 }
 
-void Logging::LogCommand::printHelp(const std::string&) const {
-    registry.printHelp();
+void Logging::LogCommand::printHelp(const std::string &prefix) const {
+    registry.printHelp(prefix);
 }
 Logging::SetLogLevelCommand::SetLogLevelCommand() {
     registry.registerCommand("debug", "Show messages with a log level of debug or greater",
@@ -137,7 +137,7 @@ void Logging::SetLogLevelCommand::operator()(const std::string &args) {
     iss >> subcmd;
 
     if (subcmd.empty() || subcmd == "?") {
-        registry.printHelp();
+        registry.printHelp("");
         return;
     }
 
@@ -163,6 +163,6 @@ std::vector<std::string> Logging::SetLogLevelCommand::complete(const std::string
     return registry.complete(prefix);
 }
 
-void Logging::SetLogLevelCommand::printHelp(const std::string&) const {
-    registry.printHelp();
+void Logging::SetLogLevelCommand::printHelp(const std::string &prefix) const {
+    registry.printHelp(prefix);
 }

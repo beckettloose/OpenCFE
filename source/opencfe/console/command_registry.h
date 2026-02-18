@@ -45,7 +45,7 @@ public:
     /**
     * Print a list of currently available commands.
     */
-    void printHelp() const;
+    void printHelp(const std::string &prefix) const;
 
     // Return all commands
     const std::vector<Command>& list() const { return commands; }

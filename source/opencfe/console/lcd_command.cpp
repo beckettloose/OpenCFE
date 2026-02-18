@@ -33,7 +33,7 @@ void LCDCommand::operator()(const std::string &args) {
     iss >> subcmd;
 
     if (subcmd.empty() || subcmd == "?") {
-        registry.printHelp();
+        registry.printHelp("");
         return;
     }
 
@@ -59,8 +59,8 @@ std::vector<std::string> LCDCommand::complete(const std::string &prefix) const {
     return registry.complete(prefix);
 }
 
-void LCDCommand::printHelp(const std::string&) const {
-    registry.printHelp();
+void LCDCommand::printHelp(const std::string &prefix) const {
+    registry.printHelp(prefix);
 }
 
 void LCDCommand::lcdLock(const std::string &args) {
