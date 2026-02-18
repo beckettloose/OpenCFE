@@ -125,6 +125,7 @@ void PowerStateManager::_subsystemTask() {
             flags->clear(CFE_PSM_FLAG_SUB_ENABLE | CFE_PSM_FLAG_SUB_SHUTDOWN);
             _log->debug("PSM", "Subsystem finished shutting down");
             _canWakeupInterrupt->enable_irq();
+            _serialWakeupInterrupt->enable_irq();
             _psmLED->write(0);
         }
     }
