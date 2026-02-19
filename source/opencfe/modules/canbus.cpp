@@ -1,4 +1,5 @@
 #include "canbus.h"
+#include <cassert>
 
 CANbus::CANbus() {
     rx_listeners = std::vector<CANbus::Listener *>();
@@ -21,25 +22,21 @@ CANbus::CANbus() {
 
 void CANbus::tx_q_ls(CANPacket *packet) {
     if (allow_queue_tx) {
-        // TODO: check if we can push to queue
-        if (!tx_queue_ls.full()) {
-            CANPacket *queuePacket = tx_queue_ls.try_alloc();
-            queuePacket->id = packet->id;
-            memcpy(&queuePacket->data[0], &packet->data[0], 8 * sizeof(uint8_t));
-            tx_queue_ls.put(queuePacket);
-        }
+        assert(!tx_queue_ls.full());
+        CANPacket *queuePacket = tx_queue_ls.try_alloc();
+        queuePacket->id = packet->id;
+        memcpy(&queuePacket->data[0], &packet->data[0], 8 * sizeof(uint8_t));
+        tx_queue_ls.put(queuePacket);
     }
 }
 
 void CANbus::tx_q_hs(CANPacket *packet) {
     if (allow_queue_tx){
-        // TODO: check if we can push to queue
-        if (!tx_queue_hs.full()) {
-            CANPacket *queuePacket = tx_queue_hs.try_alloc();
-            queuePacket->id = packet->id;
-            memcpy(&queuePacket->data[0], &packet->data[0], 8 * sizeof(uint8_t));
-            tx_queue_hs.put(queuePacket);
-        }
+        assert(!tx_queue_hs.full());
+        CANPacket *queuePacket = tx_queue_hs.try_alloc();
+        queuePacket->id = packet->id;
+        memcpy(&queuePacket->data[0], &packet->data[0], 8 * sizeof(uint8_t));
+        tx_queue_hs.put(queuePacket);
     }
 }
 
