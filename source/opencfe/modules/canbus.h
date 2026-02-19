@@ -3,6 +3,7 @@
 
 #include <mbed.h>
 #include "../subsystem.h"
+#include "Mutex.h"
 
 #define CAN_RX_QUEUE_SIZE 50
 #define CAN_RX_QUEUE_MESSAGES_PER_PERIOD 25
@@ -63,6 +64,10 @@ private:
     Mail<CANPacket, CAN_TX_QUEUE_SIZE> tx_queue_ls;
     Mail<CANPacket, CAN_TX_QUEUE_SIZE> tx_queue_hs;
     uint32_t last_can_rx = 0;
+
+    Mutex rxq_mutex;
+    Mutex txq_ls_mutex;
+    Mutex txq_hs_mutex;
 
     bool allow_queue_tx = false;
 

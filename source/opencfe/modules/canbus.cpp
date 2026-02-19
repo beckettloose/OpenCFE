@@ -22,21 +22,25 @@ CANbus::CANbus() {
 
 void CANbus::tx_q_ls(CANPacket *packet) {
     if (allow_queue_tx) {
+        txq_ls_mutex.lock();
         assert(!tx_queue_ls.full());
         CANPacket *queuePacket = tx_queue_ls.try_alloc();
         queuePacket->id = packet->id;
         memcpy(&queuePacket->data[0], &packet->data[0], 8 * sizeof(uint8_t));
         tx_queue_ls.put(queuePacket);
+        txq_ls_mutex.unlock();
     }
 }
 
 void CANbus::tx_q_hs(CANPacket *packet) {
     if (allow_queue_tx){
+        txq_hs_mutex.lock();
         assert(!tx_queue_hs.full());
         CANPacket *queuePacket = tx_queue_hs.try_alloc();
         queuePacket->id = packet->id;
         memcpy(&queuePacket->data[0], &packet->data[0], 8 * sizeof(uint8_t));
         tx_queue_hs.put(queuePacket);
+        txq_hs_mutex.unlock();
     }
 }
 
@@ -97,6 +101,7 @@ void CANbus::periodic() {
     // reads up to a predetermined number of messages from the queue at a time.
     // exit immediately if queue is empty at any point.
 
+    rxq_mutex.lock();
     for (int i = 0; i < CAN_RX_QUEUE_MESSAGES_PER_PERIOD; i++) {
         if (rx_queue.empty()) break;
 
@@ -106,6 +111,7 @@ void CANbus::periodic() {
         }
         rx_queue.free(packet);
     }
+    rxq_mutex.unlock();
 }
 
 void CANbus::txrx_loop() {
@@ -135,11 +141,13 @@ int CANbus::txrx_try_read_ls() {
     int ret = CAN_ls->read(rx_frame);
 
     if (ret) {
+        rxq_mutex.lock();
         CANPacket *packet = rx_queue.try_alloc();
         assert(packet != nullptr);
         packet->id = rx_frame.id;
         memcpy(&packet->data[0], &rx_frame.data[0], 8 * sizeof(uint8_t));
         rx_queue.put(packet);
+        rxq_mutex.unlock();
     }
 
     return ret;
@@ -149,17 +157,20 @@ int CANbus::txrx_try_read_hs() {
     int ret = CAN_hs->read(rx_frame);
 
     if (ret) {
+        rxq_mutex.lock();
         CANPacket *packet = rx_queue.try_alloc();
         assert(packet != nullptr);
         packet->id = rx_frame.id;
         memcpy(&packet->data[0], &rx_frame.data[0], 8 * sizeof(uint8_t));
         rx_queue.put(packet);
+        rxq_mutex.unlock();
     }
 
     return ret;
 }
 
 bool CANbus::txrx_try_write_ls() {
+    txq_ls_mutex.lock();
     // check if there are pending frames to write
     bool pendingFrames = !tx_queue_ls.empty();
 
@@ -168,10 +179,12 @@ bool CANbus::txrx_try_write_ls() {
         tx_ls(packet);
     }
 
+    txq_ls_mutex.unlock();
     return pendingFrames;
 }
 
 bool CANbus::txrx_try_write_hs() {
+    txq_hs_mutex.lock();
     // check if there are pending frames to write
     bool pendingFrames = !tx_queue_hs.empty();
 
@@ -180,6 +193,7 @@ bool CANbus::txrx_try_write_hs() {
         tx_hs(packet);
     }
 
+    txq_hs_mutex.unlock();
     return pendingFrames;
 }
 
